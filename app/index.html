@@ -238,6 +238,11 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .bubble{pointer-events:auto;max-width:250px;background:#f2f2f6;color:#141418;border:3px solid #000;box-shadow:inset -3px -3px 0 #bdbdc8;padding:8px 12px;font-size:20px;line-height:1.1;position:relative;animation:pop .22s cubic-bezier(.2,.9,.3,1.3)}
 .bubble::after{content:"";position:absolute;right:26px;bottom:-11px;width:12px;height:12px;background:#f2f2f6;border-right:3px solid #000;border-bottom:3px solid #000;transform:rotate(45deg)}
 .bubble.hide{display:none}
+.topic{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.topic code{font-family:var(--body);font-size:24px;color:var(--diamond);background:#0e0e12;border:3px solid #000;padding:4px 10px;word-break:break-all}
+.steps{margin:0;padding-left:1.4em;display:grid;gap:4px;max-width:70ch}
+.pform{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+@media (max-width:760px){.pform{grid-template-columns:1fr}}
 @media (max-width:420px){.buddy-btn,.buddy-btn svg{width:58px;height:54px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:760px){
@@ -298,7 +303,8 @@ function migrate(d){
 }
 function normalize(s){
   var d={v:2,settings:{allowance:50,save:40,goalName:'First $1,000',goalAmount:1000},vault:0,wallet:0,log:[],ach:{},updated:0,
-    reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now(),fx:{sound:true,buddy:true,burst:true}};
+    reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now(),fx:{sound:true,buddy:true,burst:true},
+    parent:{on:false,kid:'',topic:'',hide:false,ev:{taken:true,skipped:true,missed:true,money:true,level:true},day:0,time:'18:00',since:0}};
   if(s&&typeof s==='object'){
     d.settings=Object.assign(d.settings,s.settings||{});
     ['vault','wallet','updated','created'].forEach(function(k){if(typeof s[k]==='number')d[k]=s[k]});
@@ -311,6 +317,7 @@ function normalize(s){
     if(s.mig4)d.mig4=true;
     if(s.onboarded)d.onboarded=true;
     if(s.fx&&typeof s.fx==='object')d.fx=Object.assign(d.fx,s.fx);
+    if(s.parent&&typeof s.parent==='object'){var ev=Object.assign(d.parent.ev,s.parent.ev||{});d.parent=Object.assign(d.parent,s.parent);d.parent.ev=ev}
     if(s.snz&&typeof s.snz==='object')d.snz=s.snz;
   }
   if(!d.reminders){d.reminders=defaultReminders();d.mig3=true}
@@ -587,6 +594,7 @@ function doPay(){
   state.vault=round(state.vault+s.save);state.wallet=round(state.wallet+sp);
   state.log.push({t:Date.now(),k:'pay',a:s.allowance,n:'Payday: '+fmt(s.save)+' to vault, '+fmt(sp)+' to wallet'});
   celebrate('pay',fmt(s.save));
+  notifyParent('money','Pixel Life',kidName()+' logged payday: '+fmt(s.save)+' saved. Vault is now '+fmt(state.vault)+'.');
   commit();
 }
 var ACT={
@@ -611,14 +619,14 @@ var ACT={
       submit:function(f){
         var a=amt(val(f,'bo-a'));if(!a)return 'Enter an amount above $0.';
         state.vault=round(state.vault+a);
-        state.log.push({t:Date.now(),k:'bonus',a:a,n:val(f,'bo-n').trim()||'Bonus money'});celebrate('bonus',fmt(a));commit();
+        state.log.push({t:Date.now(),k:'bonus',a:a,n:val(f,'bo-n').trim()||'Bonus money'});celebrate('bonus',fmt(a));notifyParent('money','Pixel Life',kidName()+' added '+fmt(a)+' to savings. Vault is now '+fmt(state.vault)+'.');commit();
       }});
   },
   sweep:function(){
     var w=state.wallet;
     modal({title:'Move leftovers to the vault',ok:'Move '+fmt(w),
       body:'<p>Move all '+fmt(w)+' left in your wallet into the vault? You can\'t spend it after this.</p>',
-      submit:function(){state.vault=round(state.vault+w);state.wallet=0;state.log.push({t:Date.now(),k:'sweep',a:w,n:'Leftover wallet money'});celebrate('bonus',fmt(w));commit()}});
+      submit:function(){state.vault=round(state.vault+w);state.wallet=0;state.log.push({t:Date.now(),k:'sweep',a:w,n:'Leftover wallet money'});celebrate('bonus',fmt(w));notifyParent('money','Pixel Life',kidName()+' moved '+fmt(w)+' of leftover spending money into savings.');commit()}});
   },
   brk:function(){
     var s=state.settings;
@@ -632,7 +640,7 @@ var ACT={
         var a=amt(val(f,'br-a'));if(!a)return 'Enter an amount above $0.';
         if(a>state.vault+1e-9)return 'The vault only has '+fmt(state.vault)+'.';
         state.vault=round(state.vault-a);
-        state.log.push({t:Date.now(),k:'break',a:a,n:'Vault break: '+val(f,'br-n').trim()});floater('-'+fmt(a),'red');burst('red',14);sfx('break');say('The vault is open. You can refill it next payday!');commit();
+        state.log.push({t:Date.now(),k:'break',a:a,n:'Vault break: '+val(f,'br-n').trim()});floater('-'+fmt(a),'red');burst('red',14);sfx('break');say('The vault is open. You can refill it next payday!');notifyParent('money','Pixel Life',kidName()+' took '+fmt(a)+' out of savings. Reason: '+val(f,'br-n').trim());commit();
       }});
   },
   reset:function(){
@@ -644,7 +652,25 @@ var ACT={
   addrem:function(){editReminder(null)},
   sound:function(){unlock();setTimeout(function(){play('chime');renderSound()},80)},
   settings:function(){saveSettings(document.getElementById('st-form'))},
-  tour:function(){showWelcome(true)}
+  tour:function(){showWelcome(true)},
+  pnew:function(){
+    var go=function(){state.parent.topic=newTopic();parentOpen=true;commit()};
+    if(!state.parent.topic)return go();
+    modal({title:'Make a new code?',body:'<p>Your parent will have to subscribe to the new code in ntfy. The old code stops getting updates.</p>',ok:'Make new code',submit:function(){go()}});
+  },
+  pcopy:function(){var t=state.parent.topic;try{navigator.clipboard.writeText(t).then(function(){say('Code copied! Send it to your parent.')},function(){say('Copy did not work. Select the code and copy it.')})}catch(e){say('Copy did not work. Select the code and copy it.')}},
+  psave:function(){
+    var f=document.getElementById('pa-form'),err=document.getElementById('pa-err'),P=state.parent;
+    var on=f.querySelector('#pa-on').checked,time=val(f,'pa-time');
+    if(on&&!P.topic)return err.textContent='Press New code first, so your parent has something to subscribe to.';
+    if(!/^\d{2}:\d{2}$/.test(time))return err.textContent='Pick a time for the weekly report.';
+    if(on&&!P.on)P.since=Date.now();
+    P.on=on;P.kid=val(f,'pa-kid').trim();P.day=parseInt(val(f,'pa-day'),10)||0;P.time=time;P.hide=f.querySelector('#pa-hide').checked;
+    ['taken','skipped','missed','money','level'].forEach(function(k){P.ev[k]=f.querySelector('#pa-ev-'+k).checked});
+    err.textContent='';parentOpen=true;commit();say(on?'Parent updates are on!':'Parent updates are off.');
+  },
+  ptest:function(){fetch('/api/notify-test',{method:'POST'}).then(function(r){say(r.ok?'Test sent! Ask your parent if it showed up.':'The test did not send. Check your internet.')},function(){say('The test did not send. Is the desktop app running?')})},
+  preport:function(){fetch('/api/report-now',{method:'POST'}).then(function(r){say(r.ok?'Weekly report sent!':'The report did not send. Check your internet.')},function(){say('The report did not send. Is the desktop app running?')})}
 };
 function saveSettings(f){
   var al=amt(val(f,'st-al')),sv=parseFloat(val(f,'st-sv')),gn=val(f,'st-gn').trim(),ga=amt(val(f,'st-ga'));
@@ -663,7 +689,9 @@ function saveSettings(f){
 /* ---------- reminder actions ---------- */
 function setDose(key,s){
   state.doses[key]={s:s,t:Date.now()};delete SZ()[key];
-  if(s==='taken'){var r=findRem(idOfKey(key));celebrate('taken',r?r.name:'')}else sfx('click');
+  var r=findRem(idOfKey(key)),nm=r?r.name:'a reminder';
+  if(s==='taken'){celebrate('taken',r?r.name:'');notifyParent('taken','Pixel Life',kidName()+' took '+medName(nm)+' at '+clock(Date.now())+'.')}
+  else{sfx('click');notifyParent('skipped','Pixel Life',kidName()+' skipped '+medName(nm)+' at '+clock(Date.now())+'.')}
   commit();
 }
 function undoDose(key){delete state.doses[key];commit()}
@@ -804,6 +832,35 @@ function renderToday(){
   el.innerHTML=rows||'<p class="empty">No reminders yet. Press Add reminder.</p>';
   var ms=document.getElementById('medstreak');if(ms)ms.textContent=medStreak(state);
 }
+function parentPanel(){
+  var P=state.parent,days=DAYN.map(function(n,i){return '<option value="'+i+'"'+(P.day===i?' selected':'')+'>'+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]+'</option>'}).join('');
+  var ev=[['taken','Took a medicine'],['skipped','Skipped a medicine'],['missed','Missed a medicine'],['money','Saved or spent savings'],['level','Leveled up']];
+  var evh=ev.map(function(e){return '<label class="check" for="pa-ev-'+e[0]+'"><input type="checkbox" id="pa-ev-'+e[0]+'"'+(P.ev[e[0]]?' checked':'')+'> '+e[1]+'</label>'}).join('');
+  if(!DESKTOP)return '<section class="panel"><h2>Parent updates</h2><p class="note" style="margin:0">Phone updates for a parent or guardian work in the Pixel Life desktop app for Windows. Set them up there.</p></section>';
+  return '<section class="panel"><details class="settings" id="pa-details"'+(parentOpen?' open':'')+'><summary>Parent updates '+(P.on?'<span class="chip good">On</span>':'<span class="chip">Off</span>')+'</summary>'+
+   '<div style="display:grid;gap:12px;margin-top:14px">'+
+   '<p style="margin:0;max-width:70ch">Send a parent or guardian a notification on their phone when you check things off, plus a weekly report. It\'s free and uses the <b>ntfy</b> app.</p>'+
+   '<ol class="steps"><li>Your parent installs <b>ntfy</b> (free on the App Store and Google Play).</li><li>In ntfy, they tap <b>+</b> and subscribe to this code:</li></ol>'+
+   '<div class="topic"><code id="pa-topic">'+esc(P.topic||'press New code')+'</code><button class="btn sm" data-act="pcopy"'+(P.topic?'':' disabled')+'>Copy</button><button class="btn sm" data-act="pnew">New code</button></div>'+
+   '<ol class="steps" start="3"><li>Turn updates on below, save, then press <b>Send test</b>.</li></ol>'+
+   '<form id="pa-form" class="pform" novalidate>'+
+    '<label class="check" for="pa-on" style="grid-column:1/-1"><input type="checkbox" id="pa-on"'+(P.on?' checked':'')+'> Send updates to my parent</label>'+
+    '<label for="pa-kid">Your first name (shown in updates)<input id="pa-kid" maxlength="24" value="'+esc(P.kid)+'" placeholder="Henry"></label>'+
+    '<label for="pa-day">Weekly report day<select id="pa-day">'+days+'</select></label>'+
+    '<label for="pa-time">Report time<input type="time" id="pa-time" value="'+esc(P.time)+'"></label>'+
+    '<div style="grid-column:1/-1;display:grid;gap:6px"><span class="muted">Send an update when I...</span>'+evh+'</div>'+
+    '<label class="check" for="pa-hide" style="grid-column:1/-1"><input type="checkbox" id="pa-hide"'+(P.hide?' checked':'')+'> Hide medicine names (updates say "a reminder")</label>'+
+   '</form><p class="err" id="pa-err" role="alert"></p>'+
+   '<div class="row" style="margin:0"><button class="btn primary" data-act="psave">Save</button><button class="btn" data-act="ptest"'+(P.on&&P.topic?'':' disabled')+'>Send test</button><button class="btn" data-act="preport"'+(P.on&&P.topic?'':' disabled')+'>Send weekly report now</button></div>'+
+   '<p class="note" style="margin:0">Anyone who knows the code can see the updates, so only share it with your parent. Updates send while the desktop app is running and online.</p>'+
+   '</div></details></section>';
+}
+function newTopic(){
+  var a='abcdefghijkmnpqrstuvwxyz23456789',r='';
+  try{var b=new Uint8Array(14);crypto.getRandomValues(b);for(var i=0;i<b.length;i++)r+=a[b[i]%a.length]}catch(e){for(var j=0;j<14;j++)r+=a[Math.floor(Math.random()*a.length)]}
+  return 'pixellife-'+r;
+}
+var parentOpen=false;
 var settingsOpen=false,firstRender=true,anim={xp:0,wallet:0,vault:0},vaultRaf=0;
 function reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
 function animateTo(xp,wallet,vault){
@@ -882,6 +939,7 @@ function render(){
 
    '<section class="panel"><h2>Money history</h2>'+(items?'<ul class="log">'+items+'</ul>':'<p class="empty">Nothing yet. When your parents pay you, press Log payday.</p>')+'</section>'+
 
+   parentPanel()+
    '<section class="panel"><details class="settings" id="st-details"'+(settingsOpen?' open':'')+'><summary>Settings</summary><form id="st-form" class="form" novalidate>'+
     '<h3>Allowance</h3>'+
     '<label for="st-al">Allowance / week<input id="st-al" inputmode="decimal" value="'+s.allowance+'"></label>'+
@@ -898,6 +956,7 @@ function render(){
     '</form><p class="err" id="st-err" role="alert"></p><div class="row"><button class="btn primary" data-act="settings"'+dis+'>Save settings</button><button class="btn danger" data-act="reset"'+dis+'>Reset savings</button></div></details></section>'+
   '</div><div class="toasts" id="toasts" aria-live="polite"></div>';
   document.getElementById('st-details').addEventListener('toggle',function(){settingsOpen=this.open});
+  var pd=document.getElementById('pa-details');if(pd)pd.addEventListener('toggle',function(){parentOpen=this.open});
   renderToday();renderSound();
   firstRender=false;
   animateTo(pct,walletPct,state.vault);
@@ -964,6 +1023,13 @@ function fxFrame(){
   ctx.globalAlpha=1;
   if(fxParts.length)fxRaf=requestAnimationFrame(fxFrame);else{fxRaf=0;ctx.clearRect(0,0,cv.width,cv.height)}
 }
+function notifyParent(type,title,msg){
+  var P=state.parent;
+  if(!DESKTOP||!P||!P.on||!P.topic||!P.ev[type])return;
+  fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,msg:msg,type:type})}).catch(function(){});
+}
+function kidName(){return (state.parent&&state.parent.kid)||'Your kid'}
+function medName(n){return state.parent&&state.parent.hide?'a reminder':n}
 var CHEERS=['Nice job!','Great work!','Another one done!','You got this!','Way to go!','Keep it up!'];
 function celebrate(kind,detail){
   recentWin=Date.now();
@@ -979,6 +1045,7 @@ function levelUp(n){
   lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',20);
   var done=function(){el.remove()};el.onclick=done;setTimeout(done,2600);
   say('Level '+n+'! You are getting good at this.');
+  notifyParent('level','Pixel Life',kidName()+' reached savings level '+n+' ('+fmt(n*100)+' saved)!');
 }
 /* Pip, an original pixel helper */
 var PIP=['....XXXX....','..XXHHLLXX..','.XHWHLLLLDX.','.XHHLLLLLDX.','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLDDX','.XLLLLLLDDX.','..XXDDDDXX..','....XXXX....'];

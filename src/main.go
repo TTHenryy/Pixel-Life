@@ -129,12 +129,16 @@ func main() {
 	go stayAwake()
 	go alarmLoop()
 	go updateLoop()
+	go parentLoop()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handlePage)
 	mux.HandleFunc("/api/state", handleState)
 	mux.HandleFunc("/api/test", handleTest)
 	mux.HandleFunc("/api/version", handleVersion)
+	mux.HandleFunc("/api/event", handleEvent)
+	mux.HandleFunc("/api/notify-test", handleNotifyTest)
+	mux.HandleFunc("/api/report-now", handleReportNow)
 	srv = &http.Server{Handler: localOnly(mux)}
 
 	if !noWindow {
@@ -579,6 +583,16 @@ func askUser(o occ) {
 	saveStateLocked(st)
 	if ret == 6 || ret == 2 {
 		lastRing = time.Time{}
+		if p := parentOf(st); p.ready() {
+			ev, verb, tag := "taken", "took", "white_check_mark"
+			if ret == 2 {
+				ev, verb, tag = "skipped", "skipped", "fast_forward"
+			}
+			if p.Ev[ev] {
+				msg := fmt.Sprintf("%s %s %s at %s.", p.kid(), verb, p.med(o.r.Name), time.Now().Format("3:04 PM"))
+				go ntfySend(p.Topic, "Pixel Life", msg, tag)
+			}
+		}
 	}
 }
 
