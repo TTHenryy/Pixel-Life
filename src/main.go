@@ -39,7 +39,7 @@ var embeddedPage []byte
 // Bump these when publishing an update to the repo's app/version.json.
 const (
 	embeddedPageVersion = 4
-	exeVersion          = 4
+	exeVersion          = 5
 	updateBase          = "https://raw.githubusercontent.com/TTHenryy/Pixel-Life/main/app/"
 )
 
@@ -861,12 +861,21 @@ func selfUpdate(wantSha string) error {
 		os.Rename(oldPath, exe)
 		return err
 	}
+	if _, err := os.Stat(exe); err != nil {
+		// The new file was removed (for example by antivirus): restore the old one.
+		os.Rename(oldPath, exe)
+		return fmt.Errorf("new version missing after install")
+	}
 	log.Println("installed new exe, restarting")
 	if srv != nil {
 		srv.Close()
 	}
 	if err := exec.Command(exe, "--updated", "--no-window").Start(); err != nil {
-		return err
+		os.Remove(exe)
+		os.Rename(oldPath, exe)
+		log.Println("new version failed to start, restored the old one:", err)
+		exec.Command(exe, "--updated", "--no-window").Start()
+		os.Exit(0)
 	}
 	os.Exit(0)
 	return nil
@@ -984,14 +993,7 @@ func stopOldCopies() {
 	if resp, err := c.Post(url+"api/quit", "application/json", nil); err == nil {
 		resp.Body.Close()
 	}
-	pid := strconv.Itoa(os.Getpid())
-	for _, name := range []string{"Diamond Vault.exe", "Pixel Life.exe", "PixelLife.exe"} {
-		cmd := exec.Command("taskkill", "/F", "/IM", name, "/FI", "PID ne "+pid)
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
-		cmd.Run()
-	}
-	// Remove the old Diamond Vault program from startup.
-	log.Println("stopped old copies")
+	log.Println("asked the older copy to quit")
 }
 
 // Wipes all saved data once, so this version starts completely fresh.
