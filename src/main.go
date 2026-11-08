@@ -59,6 +59,7 @@ const (
 var (
 	user32         = syscall.NewLazyDLL("user32.dll")
 	procMessageBox = user32.NewProc("MessageBoxW")
+	procSysMetrics = user32.NewProc("GetSystemMetrics")
 	winmm          = syscall.NewLazyDLL("winmm.dll")
 	procPlaySound  = winmm.NewProc("PlaySoundW")
 	kernel32       = syscall.NewLazyDLL("kernel32.dll")
@@ -187,9 +188,11 @@ func handleVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleState(w http.ResponseWriter, r *http.Request) {
-	pingMu.Lock()
-	lastPing = time.Now()
-	pingMu.Unlock()
+	if r.URL.Query().Get("src") != "alarm" {
+		pingMu.Lock()
+		lastPing = time.Now()
+		pingMu.Unlock()
+	}
 	switch r.Method {
 	case http.MethodGet:
 		mu.Lock()
@@ -294,7 +297,7 @@ func num(v any) float64 {
 
 // ---------- window, startup, stay awake ----------
 
-func openWindow() {
+func browserPath() string {
 	candidates := []string{
 		filepath.Join(os.Getenv("LOCALAPPDATA"), `BraveSoftware\Brave-Browser\Application\brave.exe`),
 		filepath.Join(os.Getenv("ProgramFiles"), `BraveSoftware\Brave-Browser\Application\brave.exe`),
@@ -305,17 +308,23 @@ func openWindow() {
 		filepath.Join(os.Getenv("ProgramFiles(x86)"), `Google\Chrome\Application\chrome.exe`),
 		filepath.Join(os.Getenv("LOCALAPPDATA"), `Google\Chrome\Application\chrome.exe`),
 	}
-	// A separate browser profile makes it a real app window (own taskbar icon,
-	// no tabs or address bar) even when the browser is already open.
-	profile := filepath.Join(dataDir, "window")
 	for _, p := range candidates {
 		if _, err := os.Stat(p); err == nil {
-			cmd := exec.Command(p, "--app="+url, "--user-data-dir="+profile,
-				"--no-first-run", "--no-default-browser-check", "--window-size=1100,900")
-			if err := cmd.Start(); err == nil {
-				log.Println("window:", p)
-				return
-			}
+			return p
+		}
+	}
+	return ""
+}
+
+func openWindow() {
+	// A separate browser profile makes it a real app window (own taskbar icon,
+	// no tabs or address bar) even when the browser is already open.
+	if p := browserPath(); p != "" {
+		cmd := exec.Command(p, "--app="+url, "--user-data-dir="+filepath.Join(dataDir, "window"),
+			"--no-first-run", "--no-default-browser-check", "--window-size=1100,900")
+		if err := cmd.Start(); err == nil {
+			log.Println("window:", p)
+			return
 		}
 	}
 	log.Println("window: no Brave/Edge/Chrome found, using default browser")
@@ -504,8 +513,12 @@ func alarmLoop() {
 		due := dueOccs(st, time.Now())
 		if len(due) == 0 {
 			lastRing = time.Time{}
+			closePopupWhenDone()
 			continue
 		}
+		popupMu.Lock()
+		emptySince = time.Time{}
+		popupMu.Unlock()
 		if time.Since(lastRing) >= alarmRepeat(st) {
 			lastRing = time.Now()
 			kind := "chime"
@@ -523,29 +536,40 @@ func alarmLoop() {
 		pingMu.Lock()
 		windowOpen := time.Since(lastPing) < 15*time.Second
 		pingMu.Unlock()
+		if windowOpen {
+			continue // the main window shows its own alarm screen
+		}
+		if launchPopupIfNeeded() {
+			continue
+		}
+		// No Brave/Edge/Chrome: fall back to a plain Windows message box.
 		boxMu.Lock()
-		showBox := !windowOpen && !boxOpen
+		showBox := !boxOpen
 		if showBox {
 			boxOpen = true
 		}
 		boxMu.Unlock()
 		if showBox {
-			go askUser(due[0])
+			go askUser(due)
 		}
 	}
 }
 
-func askUser(o occ) {
+func askUser(due []occ) {
 	defer func() { boxMu.Lock(); boxOpen = false; boxMu.Unlock() }()
-	snoozeMin := o.r.Snooze
-	if snoozeMin < 1 {
-		snoozeMin = 10
+	snoozeMin := 10.0
+	text := "Time to take:\n"
+	for _, o := range due {
+		text += fmt.Sprintf("  - %s (%s)\n", o.r.Name, o.when.Format("3:04 PM"))
+		if o.r.Snooze >= 1 && o.r.Snooze < snoozeMin {
+			snoozeMin = o.r.Snooze
+		}
 	}
-	text := fmt.Sprintf("Time to take: %s\nScheduled for %s", o.r.Name, o.when.Format("3:04 PM"))
-	if o.r.Note != "" {
-		text += "\n" + o.r.Note
+	all := ""
+	if len(due) > 1 {
+		all = " all"
 	}
-	text += fmt.Sprintf("\n\nYes = Taken\nNo = Snooze %g min\nCancel = Skip", snoozeMin)
+	text += fmt.Sprintf("\nYes = Taken%s\nNo = Snooze%s %g min\nCancel = Skip%s", all, all, snoozeMin, all)
 	t, _ := syscall.UTF16PtrFromString(text)
 	c, _ := syscall.UTF16PtrFromString("Pixel Life reminder")
 	const flags = 0x3 | 0x30 | 0x1000 | 0x10000 | 0x40000 // YESNOCANCEL, WARNING, SYSTEMMODAL, SETFOREGROUND, TOPMOST
@@ -562,22 +586,30 @@ func askUser(o occ) {
 		doses = map[string]any{}
 		st["doses"] = doses
 	}
-	if _, done := doses[o.key]; done {
-		return // already handled in the window
-	}
 	now := float64(time.Now().UnixMilli())
-	switch ret {
-	case 6: // Yes
-		doses[o.key] = map[string]any{"s": "taken", "t": now}
-	case 2: // Cancel
-		doses[o.key] = map[string]any{"s": "skipped", "t": now}
-	default: // No = snooze
-		snz, ok := st["snz"].(map[string]any)
-		if !ok {
-			snz = map[string]any{}
-			st["snz"] = snz
+	snz, ok := st["snz"].(map[string]any)
+	if !ok {
+		snz = map[string]any{}
+		st["snz"] = snz
+	}
+	var names []string
+	for _, o := range due {
+		if _, done := doses[o.key]; done {
+			continue // already handled in the window
 		}
-		snz[o.key] = now + snoozeMin*60000
+		names = append(names, o.r.Name)
+		switch ret {
+		case 6: // Yes
+			doses[o.key] = map[string]any{"s": "taken", "t": now}
+		case 2: // Cancel
+			doses[o.key] = map[string]any{"s": "skipped", "t": now}
+		default: // No = snooze
+			sm := o.r.Snooze
+			if sm < 1 {
+				sm = 10
+			}
+			snz[o.key] = now + sm*60000
+		}
 	}
 	st["updated"] = now
 	saveStateLocked(st)
@@ -588,8 +620,12 @@ func askUser(o occ) {
 			if ret == 2 {
 				ev, verb, tag = "skipped", "skipped", "fast_forward"
 			}
-			if p.Ev[ev] {
-				msg := fmt.Sprintf("%s %s %s at %s.", p.kid(), verb, p.med(o.r.Name), time.Now().Format("3:04 PM"))
+			if p.Ev[ev] && len(names) > 0 {
+				shown := names
+				if p.Hide {
+					shown = []string{fmt.Sprintf("%d reminder(s)", len(names))}
+				}
+				msg := fmt.Sprintf("%s %s %s at %s.", p.kid(), verb, strings.Join(shown, ", "), time.Now().Format("3:04 PM"))
 				go ntfySend(p.Topic, "Pixel Life", msg, tag)
 			}
 		}
@@ -829,4 +865,79 @@ func cleanupOldExe() {
 			time.Sleep(time.Second)
 		}
 	}()
+}
+
+// ---------- themed alarm pop-up window ----------
+
+var (
+	popupMu     sync.Mutex
+	popupCmd    *exec.Cmd
+	popupClosed time.Time
+	emptySince  time.Time
+)
+
+// Opens a small Pixel Life alarm window showing everything that's due.
+// Returns false only when no suitable browser exists.
+func launchPopupIfNeeded() bool {
+	p := browserPath()
+	if p == "" {
+		return false
+	}
+	popupMu.Lock()
+	defer popupMu.Unlock()
+	if popupCmd != nil {
+		return true
+	}
+	if time.Since(popupClosed) < 60*time.Second {
+		return true // closed with the X; open it again in a minute if still due
+	}
+	w, h := 560, 700
+	sw, _, _ := procSysMetrics.Call(0) // SM_CXSCREEN
+	sh, _, _ := procSysMetrics.Call(1) // SM_CYSCREEN
+	x, y := (int(sw)-w)/2, (int(sh)-h)/2
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+	cmd := exec.Command(p, "--app="+url+"#alarm", "--user-data-dir="+filepath.Join(dataDir, "alarm"),
+		"--no-first-run", "--no-default-browser-check",
+		fmt.Sprintf("--window-size=%d,%d", w, h), fmt.Sprintf("--window-position=%d,%d", x, y))
+	if err := cmd.Start(); err != nil {
+		log.Println("popup:", err)
+		return false
+	}
+	popupCmd = cmd
+	go func(c *exec.Cmd) {
+		c.Wait()
+		popupMu.Lock()
+		if popupCmd == c {
+			popupCmd = nil
+			popupClosed = time.Now()
+		}
+		popupMu.Unlock()
+	}(cmd)
+	return true
+}
+
+// Closes the pop-up a few seconds after everything is handled,
+// so "All done!" shows briefly.
+func closePopupWhenDone() {
+	popupMu.Lock()
+	defer popupMu.Unlock()
+	popupClosed = time.Time{}
+	if popupCmd == nil {
+		emptySince = time.Time{}
+		return
+	}
+	if emptySince.IsZero() {
+		emptySince = time.Now()
+		return
+	}
+	if time.Since(emptySince) > 3*time.Second {
+		popupCmd.Process.Kill()
+		popupCmd = nil
+		emptySince = time.Time{}
+	}
 }

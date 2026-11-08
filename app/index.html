@@ -143,8 +143,21 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .dialog{width:min(480px,100%);display:grid;gap:12px}
 .dialog h2{margin:0;font-size:12px;line-height:1.6}
 .dialog p{margin:0}
-.alarmbox{border-color:var(--red);animation:pulse 1s steps(2) infinite}
-.alarmbox h2{font-size:16px;color:var(--red)}
+.alarmbox{border-color:var(--red);animation:pulse 1s steps(2) infinite,pop .3s cubic-bezier(.2,.9,.3,1.3);width:min(520px,100%)}
+.overlay.alarm{background:repeating-linear-gradient(45deg,rgba(70,6,10,.9) 0 26px,rgba(40,0,4,.9) 26px 52px);background-size:74px 74px;animation:fade .2s ease-out,stripes 1.6s linear infinite}
+@keyframes stripes{to{background-position:74px 0}}
+.al-top{display:flex;gap:14px;align-items:center}
+.al-pip{width:68px;height:62px;flex:none}
+.al-pip svg{width:68px;height:62px;animation:alertb .45s steps(2) infinite}
+.al-sub{color:var(--muted);font-size:20px}
+.alrow{animation:rise .3s ease-out both}
+.alrow:nth-child(3){animation-delay:.06s}.alrow:nth-child(4){animation-delay:.12s}.alrow:nth-child(5){animation-delay:.18s}
+.al-time{font-family:var(--display);font-size:9px;color:var(--diamond)}
+.al-all{display:flex;justify-content:center}
+.al-done{text-align:center;justify-items:center}
+.al-done h2{color:var(--xp);font-size:16px}
+body.alarm-only{background:#1a0004}
+.alarmbox h2{font-size:15px;color:var(--red);line-height:1.5}
 .alrow{display:grid;gap:8px;padding:10px;background:var(--slot);border:3px solid #000}
 .alrow b{font-weight:400;font-size:30px;color:var(--gold);line-height:1}
 .err{color:var(--red);min-height:1.2em}
@@ -329,6 +342,7 @@ var state=normalize(embedded);
 var mode='pending',readOnly=false,statusMsg='',docRef=null,loaded=false;
 function SZ(){if(!state.snz||typeof state.snz!=='object')state.snz={};return state.snz}
 var DESKTOP=location.protocol==='http:'&&location.hostname==='127.0.0.1'&&location.port==='47821';
+var ALARM_ONLY=DESKTOP&&location.hash==='#alarm';
 
 /* ---------- helpers ---------- */
 function round(n){return Math.round(n*100)/100}
@@ -540,7 +554,7 @@ function checkVersion(){
 }
 function pollDesk(first){
   checkVersion();
-  fetch('/api/state',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
+  fetch('/api/state'+(ALARM_ONLY?'?src=alarm':''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
     if(statusMsg&&/desktop app/i.test(statusMsg)){statusMsg='';renderStatus()}
     if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();maybeWelcome()}return}
     if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy()}
@@ -704,6 +718,14 @@ function setDose(key,s){
   else{sfx('click');notifyParent('skipped','Pixel Life',kidName()+' skipped '+medName(nm)+' at '+clock(Date.now())+'.')}
   commit();
 }
+function takeAll(){
+  var due=dueList();if(!due.length)return;
+  var now=Date.now(),names=[];
+  due.forEach(function(o){state.doses[o.key]={s:'taken',t:now};delete SZ()[o.key];names.push(medName(o.r.name))});
+  celebrate('taken','');burst('gem',30);
+  notifyParent('taken','Pixel Life',kidName()+' took '+names.join(', ')+' at '+clock(now)+'.');
+  commit();
+}
 function undoDose(key){delete state.doses[key];commit()}
 function snooze(key){var r=findRem(idOfKey(key));if(!r)return;SZ()[key]=Date.now()+(r.snooze||10)*60000;lastRing=0;commit()}
 function editReminder(id){
@@ -782,20 +804,27 @@ function tick(){
     }
     document.title='(!) Take '+due.map(function(o){return o.r.name}).join(', ');
   }else{
-    if(alarmKey){alarmKey='';document.getElementById('alarm-host').innerHTML=''}
+    if(alarmKey){
+      alarmKey='';
+      if(ALARM_ONLY){
+        document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipSvg('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div></div></div>';
+        lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',30);
+      }else document.getElementById('alarm-host').innerHTML='';
+    }
     lastRing=0;document.title='Pixel Life';
   }
 }
 function renderAlarm(due){
   var rows=due.map(function(o){
     var r=o.r,k=esc(o.key);
-    return '<div class="alrow"><div><b>'+esc(r.name)+'</b><div class="muted">'+fmtTime(o.t)+(r.note?' · '+esc(r.note):'')+'</div></div>'+
+    return '<div class="alrow"><div><div class="al-time">'+fmtTime(o.t)+'</div><b>'+esc(r.name)+'</b>'+(r.note?'<div class="muted">'+esc(r.note)+'</div>':'')+'</div>'+
       '<div class="actions"><button class="btn primary" data-dose="taken" data-key="'+k+'">Taken</button>'+
       '<button class="btn" data-snooze="'+k+'">Snooze '+(r.snooze||10)+' min</button>'+
       '<button class="btn sm" data-dose="skipped" data-key="'+k+'">Skip</button></div></div>';
   }).join('');
   document.getElementById('alarm-host').innerHTML='<div class="overlay alarm"><div class="dialog panel alarmbox" role="alertdialog" aria-labelledby="al-h">'+
-    '<h2 id="al-h">Time to take it!</h2>'+rows+
+    '<div class="al-top"><div class="al-pip">'+pipSvg('alert')+'</div><div><h2 id="al-h">'+(due.length>1?'Time to take these!':'Time to take it!')+'</h2><div class="al-sub">'+clock(Date.now())+(due.length>1?' · '+due.length+' reminders at once':'')+'</div></div></div>'+rows+
+    (due.length>1?'<div class="al-all"><button class="btn primary loud" data-takeall="1">Taken all '+due.length+'</button></div>':'')+
     (soundOn()?'':'<button class="btn danger loud" data-act="sound">Sound is off: tap to turn it on</button>')+
     '</div></div>';
   var b=document.querySelector('#alarm-host [data-dose]');if(b)b.focus();
@@ -890,6 +919,7 @@ function animateTo(xp,wallet,vault){
   })(t0);
 }
 function render(){
+  if(ALARM_ONLY){document.body.classList.add('alarm-only');document.getElementById('root').innerHTML='<div class="toasts" id="toasts"></div>';return}
   var s=state.settings,sp=spendAmt(),st=streak(state);
   var pct=Math.max(0,Math.min(100,state.vault/s.goalAmount*100));
   var remaining=Math.max(0,round(s.goalAmount-state.vault));
@@ -977,6 +1007,7 @@ document.addEventListener('click',function(e){
   if(g){g.classList.remove('spin');void g.getBoundingClientRect();g.classList.add('spin');sfx('coin');burst('gem',6);return}
   var b=e.target.closest('button');if(!b||b.disabled)return;
   if(!b.hasAttribute('data-dose')&&!b.closest('.buddy'))sfx('click');
+  if(b.hasAttribute('data-takeall'))return takeAll();
   if(b.hasAttribute('data-dose'))return setDose(b.getAttribute('data-key'),b.getAttribute('data-dose'));
   if(b.hasAttribute('data-undo'))return undoDose(b.getAttribute('data-undo'));
   if(b.hasAttribute('data-snooze'))return snooze(b.getAttribute('data-snooze'));
@@ -1081,7 +1112,7 @@ function buddyMood(){
 }
 function updateBuddy(){
   var host=document.getElementById('buddy-host');if(!host)return;
-  if(!state.fx||!state.fx.buddy){host.innerHTML='';pipMood='';return}
+  if(ALARM_ONLY||!state.fx||!state.fx.buddy){host.innerHTML='';pipMood='';return}
   if(!host.firstChild){
     host.innerHTML='<div class="buddy"><div class="bubble hide" id="pip-say" role="status" aria-live="polite"></div><button class="buddy-btn" id="pip" aria-label="Pip the helper. Click for a tip."></button></div>';
     host.querySelector('#pip').onclick=function(){
@@ -1109,7 +1140,7 @@ function say(text){
 
 /* ---------- welcome + tutorial ---------- */
 var welcomeShown=false,tutStep=0,wlRaf=0;
-function maybeWelcome(){if(!state.onboarded&&!welcomeShown)showWelcome(false)}
+function maybeWelcome(){if(ALARM_ONLY)return;if(!state.onboarded&&!welcomeShown)showWelcome(false)}
 function slides(){
   var s=state.settings,sp=spendAmt();
   return [
@@ -1226,7 +1257,7 @@ function subscribe(){
   });
 }
 var tries=0;
-if(DESKTOP){mode='desktop';render();pollDesk(true);setInterval(function(){pollDesk(false)},4000)}
+if(DESKTOP){mode='desktop';render();pollDesk(true);setInterval(function(){pollDesk(false)},ALARM_ONLY?2000:4000)}
 else (function connect(){
   if(!(window.claude&&typeof window.claude.use==='function')){if(tries++<15)return setTimeout(connect,200);return goLocal()}
   Promise.all([window.claude.use('db'),window.claude.use('user')]).then(function(r){
