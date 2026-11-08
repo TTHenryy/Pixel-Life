@@ -537,11 +537,14 @@ function flush(){
     else statusMsg='Could not save online. Changes stay on this device.';
   }).then(function(){writing=false;renderStatus();if(dirty)setTimeout(flush,1500)});
 }
+var syncedAt=0;
 function flushDesk(){
   if(writing){dirty=true;return}
   writing=true;dirty=false;
-  fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)})
-    .then(function(r){if(!r.ok)throw 0;if(/desktop app/i.test(statusMsg))statusMsg=''})
+  var sent=state.updated;
+  var body=Object.assign({},state,{_base:syncedAt});
+  fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw 0;syncedAt=Math.max(syncedAt,sent||0);if(/desktop app/i.test(statusMsg))statusMsg=''})
     .catch(function(){statusMsg='Could not save to the desktop app. Is it still running?'})
     .then(function(){writing=false;renderStatus();if(dirty)flushDesk()});
 }
@@ -557,6 +560,7 @@ function pollDesk(first){
   fetch('/api/state'+(ALARM_ONLY?'?src=alarm':''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
     if(statusMsg&&/desktop app/i.test(statusMsg)){statusMsg='';renderStatus()}
     if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();maybeWelcome()}return}
+    if(d&&d.updated)syncedAt=Math.max(syncedAt,d.updated);
     if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy()}
     else if(first&&(state.updated||0)>(d.updated||0))flushDesk();
     if(first)maybeWelcome();
@@ -577,6 +581,7 @@ function commit(){
   render();scheduleFlush();showToasts();tick();updateBuddy();
 }
 function adoptLocal(){
+  if(DESKTOP)return;
   var local=null;try{local=JSON.parse(lsGet(LS))}catch(e){}
   if(local&&(local.updated||0)>(state.updated||0))state=normalize(local);
 }
@@ -807,8 +812,10 @@ function tick(){
     if(alarmKey){
       alarmKey='';
       if(ALARM_ONLY){
-        document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipSvg('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div></div></div>';
+        document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipSvg('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div><button class="btn" id="al-close">Close</button></div></div>';
         lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',30);
+        document.getElementById('al-close').onclick=function(){window.close()};
+        setTimeout(function(){if(!dueList().length)window.close()},2500);
       }else document.getElementById('alarm-host').innerHTML='';
     }
     lastRing=0;document.title='Pixel Life';

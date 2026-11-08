@@ -38,8 +38,8 @@ var embeddedPage []byte
 
 // Bump these when publishing an update to the repo's app/version.json.
 const (
-	embeddedPageVersion = 1
-	exeVersion          = 1
+	embeddedPageVersion = 2
+	exeVersion          = 2
 	updateBase          = "https://raw.githubusercontent.com/TTHenryy/Pixel-Life/main/app/"
 )
 
@@ -112,6 +112,13 @@ func main() {
 	loadPage()
 
 	ln, err := net.Listen("tcp", addr)
+	if err != nil && !updated && runningIsOlder() {
+		stopOldCopies()
+		for i := 0; i < 20 && err != nil; i++ {
+			time.Sleep(500 * time.Millisecond)
+			ln, err = net.Listen("tcp", addr)
+		}
+	}
 	if err != nil && updated {
 		// The old version is still shutting down; wait for the port.
 		for i := 0; i < 40 && err != nil; i++ {
@@ -125,6 +132,7 @@ func main() {
 		return
 	}
 	cleanupOldExe()
+	oneTimeWipe(appData)
 
 	addToStartup()
 	go stayAwake()
@@ -137,6 +145,14 @@ func main() {
 	mux.HandleFunc("/api/state", handleState)
 	mux.HandleFunc("/api/test", handleTest)
 	mux.HandleFunc("/api/version", handleVersion)
+	mux.HandleFunc("/api/quit", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method", 405)
+			return
+		}
+		w.Write([]byte(`{"ok":true}`))
+		go func() { time.Sleep(200 * time.Millisecond); os.Exit(0) }()
+	})
 	mux.HandleFunc("/api/event", handleEvent)
 	mux.HandleFunc("/api/notify-test", handleNotifyTest)
 	mux.HandleFunc("/api/report-now", handleReportNow)
@@ -217,10 +233,11 @@ func handleState(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		defer mu.Unlock()
-		// Keep doses the desktop app recorded after the page's last change.
+		// Keep check-offs that arrived after this page last synced.
 		if cur, err := loadStateLocked(); err == nil {
 			mergeNewerDoses(cur, incoming)
 		}
+		delete(incoming, "_base")
 		if err := saveStateLocked(incoming); err != nil {
 			http.Error(w, "save error", 500)
 			return
@@ -244,7 +261,10 @@ func handleTest(w http.ResponseWriter, r *http.Request) {
 }
 
 func mergeNewerDoses(cur, incoming map[string]any) {
-	inUpdated := num(incoming["updated"])
+	inUpdated := num(incoming["_base"])
+	if inUpdated == 0 {
+		inUpdated = num(incoming["updated"])
+	}
 	curDoses, _ := cur["doses"].(map[string]any)
 	inDoses, ok := incoming["doses"].(map[string]any)
 	if !ok {
@@ -940,4 +960,52 @@ func closePopupWhenDone() {
 		popupCmd = nil
 		emptySince = time.Time{}
 	}
+}
+
+// ---------- replacing old copies ----------
+
+// True when the copy already running is Diamond Vault or an older Pixel Life.
+func runningIsOlder() bool {
+	c := &http.Client{Timeout: 2 * time.Second}
+	resp, err := c.Get(url + "api/version")
+	if err != nil {
+		return true
+	}
+	defer resp.Body.Close()
+	var v struct{ Exe int }
+	if resp.StatusCode != 200 || json.NewDecoder(resp.Body).Decode(&v) != nil {
+		return true // Diamond Vault has no version endpoint
+	}
+	return v.Exe < exeVersion
+}
+
+func stopOldCopies() {
+	c := &http.Client{Timeout: 2 * time.Second}
+	if resp, err := c.Post(url+"api/quit", "application/json", nil); err == nil {
+		resp.Body.Close()
+	}
+	pid := strconv.Itoa(os.Getpid())
+	for _, name := range []string{"Diamond Vault.exe", "Pixel Life.exe", "PixelLife.exe"} {
+		cmd := exec.Command("taskkill", "/F", "/IM", name, "/FI", "PID ne "+pid)
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+		cmd.Run()
+	}
+	// Remove the old Diamond Vault program from startup.
+	log.Println("stopped old copies")
+}
+
+// Wipes all saved data once, so this version starts completely fresh.
+const wipeID = "fresh-start-2026-11-07"
+
+func oneTimeWipe(appData string) {
+	marker := filepath.Join(dataDir, "wiped.txt")
+	if b, err := os.ReadFile(marker); err == nil && strings.TrimSpace(string(b)) == wipeID {
+		return
+	}
+	for _, f := range []string{statePath, filepath.Join(dataDir, "parent.json"), filepath.Join(dataDir, "page.html"), filepath.Join(dataDir, "page.version")} {
+		os.Remove(f)
+	}
+	os.RemoveAll(filepath.Join(appData, "DiamondVault"))
+	os.WriteFile(marker, []byte(wipeID), 0o644)
+	log.Println("wiped saved data for a fresh start")
 }
