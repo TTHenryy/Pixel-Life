@@ -362,23 +362,7 @@ function insulinReminders(since){
   ];
 }
 function defaultReminders(){return []}
-function migrate(d){
-  // v3: replace the single placeholder insulin reminder with fast-acting + long-acting
-  if(!d.mig3){
-    var has=d.reminders.some(function(r){return r.id==='r-fast'||r.id==='r-glargine'});
-    if(!has){
-      d.reminders=d.reminders.filter(function(r){return r.id!=='r-insulin'});
-      d.reminders=insulinReminders(Date.now()).concat(d.reminders);
-    }
-    d.mig3=true;
-  }
-  if(!d.mig4){
-    d.reminders.forEach(function(r){
-      if(r.id==='r-fast'){r.mode='timer';r.every=3;r.anchor=Date.UTC(2026,10,8,4,52);r.time='20:52';delete r.until;r.since=0}
-    });
-    d.mig4=true;
-  }
-}
+function migrate(d){d.mig3=true;d.mig4=true}
 function normalize(s){
   var d={v:2,profile:{name:''},settings:{allowance:10,save:5,goalName:'My first goal',goalAmount:100},vault:0,wallet:0,log:[],ach:{},updated:0,
     reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now(),fx:{sound:true,buddy:true,burst:true},
@@ -394,6 +378,7 @@ function normalize(s){
     if(s.mig3)d.mig3=true;
     if(s.mig4)d.mig4=true;
     if(s.onboarded)d.onboarded=true;
+    if(s.resetToken)d.resetToken=s.resetToken;
     if(s.profile&&typeof s.profile==='object')d.profile=Object.assign(d.profile,s.profile);
     if(s.lastAllDone)d.lastAllDone=s.lastAllDone;
     if(s.fx&&typeof s.fx==='object')d.fx=Object.assign(d.fx,s.fx);
@@ -423,7 +408,7 @@ function shortDate(t){return new Date(t).toLocaleDateString('en-US',{month:'shor
 function longDate(t){return new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
 function clock(t){return new Date(t).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
 function fmtTime(hm){var p=hm.split(':'),h=+p[0],m=p[1];return ((h%12)||12)+':'+m+' '+(h<12?'AM':'PM')}
-function toMin(hm){var p=hm.split(':');return (+p[0])*60+(+p[1])}
+function toMin(hm){if(typeof hm!=='string'||hm.indexOf(':')<0)return 0;var p=hm.split(':');return (+p[0])*60+(+p[1])}
 function amt(v){var n=round(parseFloat(String(v).replace(/[$,\s]/g,'')));return isFinite(n)&&n>0?n:null}
 function spendAmt(){return round(state.settings.allowance-state.settings.save)}
 function streak(s){
@@ -651,11 +636,11 @@ function pollDesk(first){
   checkVersion();
   fetch('/api/state'+(ALARM_ONLY?'?src=alarm':''),{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
     if(statusMsg&&/desktop app/i.test(statusMsg)){statusMsg='';renderStatus()}
-    if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();maybeWelcome()}return}
+    if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();afterLoad()}return}
     if(d&&d.updated)syncedAt=Math.max(syncedAt,d.updated);
     if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy()}
     else if(first&&(state.updated||0)>(d.updated||0))flushDesk();
-    if(first)maybeWelcome();
+    if(first)afterLoad();
   }).catch(function(){statusMsg='Lost the desktop app. Reopen Pixel Life.exe.';renderStatus()});
 }
 function commit(){
@@ -771,7 +756,7 @@ var ACT={
       gate:function(f){return val(f,'ra-c').trim().toUpperCase()==='RESET'},
       submit:function(){
         try{localStorage.removeItem(LS);localStorage.removeItem(SEEN);localStorage.removeItem(SNZ)}catch(e){}
-        state=normalize(null);anim={xp:0,wallet:0,vault:0};lastLevel=0;settingsOpen=false;parentOpen=false;
+        state=normalize(null);state.resetToken=RESET_TOKEN;anim={xp:0,wallet:0,vault:0};lastLevel=0;settingsOpen=false;parentOpen=false;
         commit();welcomeShown=false;setTimeout(function(){showWelcome(false)},250);
       }});
   },
@@ -812,7 +797,7 @@ function saveSettings(f){
 function setDose(key,s){
   var hadAlarm=!!alarmKey;
   state.doses[key]={s:s,t:Date.now()};delete SZ()[key];
-  if(s==='taken'&&hadAlarm&&!dueList().length)setTimeout(function(){successStamp(1)},50);
+  if(s==='taken')setTimeout(function(){successStamp(1)},50);
   var r=findRem(idOfKey(key)),nm=r?r.name:'a reminder';
   var isMed=r&&(r.med||r.icon==='pill'||r.icon==='pen');
   if(s==='taken'){celebrate('taken',r?r.name:'');notifyParent('taken','Pixel Life',kidName()+(isMed?' took ':' finished ')+(isMed?medName(nm):nm)+' at '+clock(Date.now())+'.')}
@@ -848,7 +833,7 @@ function successStamp(n){
   if(stampShowing)return;stampShowing=true;
   var el=document.createElement('div');el.className='success';el.setAttribute('role','status');
   var nm=state.profile&&state.profile.name;
-  el.innerHTML='<div class="stamp">SUCCESS!<small>'+(n>1?n+' reminders done':'All done')+(nm?', nice work '+esc(nm)+'!':'!')+'</small></div>';
+  el.innerHTML='<div class="stamp">SUCCESS!<small>'+(n>1?n+' reminders done':'Reminder done')+(nm?', nice work '+esc(nm)+'!':'!')+'</small></div>';
   document.body.appendChild(el);
   sfx('level');
   setTimeout(function(){
@@ -1011,7 +996,7 @@ function renderToday(){
     else if(r.every)sub.push('Every '+r.every+' hr'+(r.every===1?'':'s')+', '+fmtTime(r.time)+' to '+fmtTime(r.until||'23:59'));
     if(r.note)sub.push(r.note);
     if(!isTimer(r)&&r.days.length!==7)sub.push(r.days.map(function(i){return DAYN[i]}).join(', '));
-    if(r.every&&v.total)sub.push(v.taken+' of '+v.total+' taken today');
+    if(r.every&&v.total)sub.push(v.taken+' of '+v.total+' done today');
     var btns='';
     if(v.k!=='off'&&v.k!=='done'&&v.occ)btns='<button class="btn sm primary" data-dose="taken" data-key="'+esc(v.occ.key)+'">Done</button><button class="btn sm" data-dose="skipped" data-key="'+esc(v.occ.key)+'">Skip</button>';
     if(v.undoKey&&v.k!=='off')btns+='<button class="btn sm" data-undo="'+esc(v.undoKey)+'">Undo</button>';
@@ -1456,6 +1441,15 @@ function say(text){
 
 /* ---------- welcome, setup and tour ---------- */
 var welcomeShown=false,wlRaf=0,obStep='title',obTour=0,obTpl=null,obMade=0,obMoney=null,obReplay=false;
+var RESET_TOKEN='fresh-7';
+function applyReset(){
+  if(ALARM_ONLY||state.resetToken===RESET_TOKEN)return false;
+  try{localStorage.removeItem(LS);localStorage.removeItem(SEEN);localStorage.removeItem(SNZ)}catch(e){}
+  state=normalize(null);state.resetToken=RESET_TOKEN;
+  anim={xp:0,wallet:0,vault:0};lastLevel=0;settingsOpen=false;parentOpen=false;welcomeShown=false;shownStars=-1;
+  commit();return true;
+}
+function afterLoad(){applyReset();maybeWelcome()}
 function maybeWelcome(){if(ALARM_ONLY)return;if(!state.onboarded&&!welcomeShown)showWelcome(false)}
 function showWelcome(replay){
   welcomeShown=true;obReplay=replay;obMade=0;obMoney=null;
@@ -1665,11 +1659,11 @@ adoptLocal();
 render();
 setInterval(function(){tick();renderToday();updateBuddy()},5000);
 updateBuddy();lastLevel=Math.floor(state.vault/100);
-setTimeout(maybeWelcome,6000);
+setTimeout(afterLoad,6000);
 if(!ALARM_ONLY)startAmbient();
 document.addEventListener('visibilitychange',function(){tick();renderToday()});
 tick();
-function goLocal(){if(mode==='db')return;mode='local';render();tick();maybeWelcome()}
+function goLocal(){if(mode==='db')return;mode='local';render();tick();afterLoad()}
 function subscribe(){
   var timer=setTimeout(function(){if(!loaded){statusMsg='Can\'t reach your saved data yet. Changes stay on this device.';renderStatus()}},10000);
   docRef.onSnapshot(function(snap){
@@ -1679,9 +1673,9 @@ function subscribe(){
       if(!snap.metadata.hasPendingWrites&&(d.updated||0)>(state.updated||0)){
         state=normalize(clone(d));lsSet(LS,JSON.stringify(state));lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy();
       }else if(!loaded&&(state.updated||0)>(d.updated||0)){scheduleFlush()}
-      loaded=true;maybeWelcome();
+      loaded=true;afterLoad();
     }else if(!snap.metadata.fromCache&&!loaded){
-      loaded=true;state.updated=state.updated||Date.now();scheduleFlush();maybeWelcome();
+      loaded=true;state.updated=state.updated||Date.now();scheduleFlush();afterLoad();
     }
   },function(e){
     clearTimeout(timer);
