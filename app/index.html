@@ -156,6 +156,14 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 @keyframes stamp{from{opacity:0;transform:translateY(-50%) rotate(-8deg) scale(2.2)}to{opacity:1;transform:translateY(-50%) rotate(-8deg) scale(1)}}
 .alrow.leaving{opacity:0;transform:translateX(70px) scale(.96);max-height:0!important;padding-top:0;padding-bottom:0;margin-top:-12px;border-width:0}
 .overlay.closing{animation:fadeout .32s ease-in forwards}
+.success{position:fixed;inset:0;z-index:98;display:grid;place-items:center;pointer-events:none;background:radial-gradient(circle,rgba(20,60,10,.55),rgba(0,0,0,.35) 70%);animation:fade .15s ease-out}
+.success.out{animation:fadeout .45s ease-in forwards}
+.stamp{font-family:var(--display);font-size:clamp(44px,11vw,150px);color:var(--xp);letter-spacing:4px;padding:.25em .45em;border:.09em solid var(--xp);outline:.04em solid var(--xp);outline-offset:.08em;
+  text-shadow:.04em .04em 0 #1d3a08;box-shadow:inset 0 0 0 .03em rgba(0,0,0,.25);background:rgba(10,30,5,.55);transform:rotate(-9deg);animation:slam .5s cubic-bezier(.2,.9,.3,1.25) both}
+.stamp small{display:block;font-size:.18em;letter-spacing:2px;text-align:center;margin-top:.5em;color:#d9ffb8;text-shadow:2px 2px 0 #000}
+@keyframes slam{0%{opacity:0;transform:rotate(-20deg) scale(3.2)}55%{opacity:1;transform:rotate(-7deg) scale(.92)}75%{transform:rotate(-10deg) scale(1.04)}100%{transform:rotate(-9deg) scale(1)}}
+.shake{animation:shake .45s steps(6)}
+@keyframes shake{0%,100%{transform:none}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-5px,-3px)}80%{transform:translate(4px,3px)}}
 .overlay.closing .dialog{animation:shrink .32s ease-in forwards}
 @keyframes fadeout{to{opacity:0}}
 @keyframes shrink{to{opacity:0;transform:scale(.9) translateY(10px)}}
@@ -802,7 +810,9 @@ function saveSettings(f){
 
 /* ---------- reminder actions ---------- */
 function setDose(key,s){
+  var hadAlarm=!!alarmKey;
   state.doses[key]={s:s,t:Date.now()};delete SZ()[key];
+  if(s==='taken'&&hadAlarm&&!dueList().length)setTimeout(function(){successStamp(1)},50);
   var r=findRem(idOfKey(key)),nm=r?r.name:'a reminder';
   var isMed=r&&(r.med||r.icon==='pill'||r.icon==='pen');
   if(s==='taken'){celebrate('taken',r?r.name:'');notifyParent('taken','Pixel Life',kidName()+(isMed?' took ':' finished ')+(isMed?medName(nm):nm)+' at '+clock(Date.now())+'.')}
@@ -823,7 +833,7 @@ function leaveThen(btn,kind,done){
   },420);
 }
 function takeAll(){
-  var rows=[].slice.call(document.querySelectorAll('#alarm-host .alrow'));
+  var rows=[].slice.call(document.querySelectorAll('#alarm-host .alrow:not(.got)'));
   if(rows.length&&!reducedMotion()){
     var btn=document.querySelector('[data-takeall]');if(btn)btn.disabled=true;
     rows.forEach(function(r,i){setTimeout(function(){r.classList.add('got');r.querySelectorAll('button').forEach(function(x){x.disabled=true})},i*110)});
@@ -833,11 +843,27 @@ function takeAll(){
   }
   takeAllNow();
 }
+var stampShowing=false;
+function successStamp(n){
+  if(stampShowing)return;stampShowing=true;
+  var el=document.createElement('div');el.className='success';el.setAttribute('role','status');
+  var nm=state.profile&&state.profile.name;
+  el.innerHTML='<div class="stamp">SUCCESS!<small>'+(n>1?n+' reminders done':'All done')+(nm?', nice work '+esc(nm)+'!':'!')+'</small></div>';
+  document.body.appendChild(el);
+  sfx('level');
+  setTimeout(function(){
+    var t=document.getElementById('root');if(t&&!reducedMotion()){t.classList.remove('shake');void t.offsetWidth;t.classList.add('shake')}
+    var ah=document.querySelector('#alarm-host .overlay');if(ah&&!reducedMotion()){ah.classList.remove('shake');void ah.offsetWidth;ah.classList.add('shake')}
+    lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',24);confetti(160);
+  },260);
+  setTimeout(function(){el.classList.add('out')},1700);
+  setTimeout(function(){el.remove();stampShowing=false},2200);
+}
 function takeAllNow(){
   var due=dueList();if(!due.length)return;
   var now=Date.now(),names=[];
   due.forEach(function(o){state.doses[o.key]={s:'taken',t:now};delete SZ()[o.key];names.push(medName(o.r.name))});
-  celebrate('taken','');burst('gem',30);
+  celebrate('taken','');successStamp(due.length);
   notifyParent('taken','Pixel Life',kidName()+' took '+names.join(', ')+' at '+clock(now)+'.');
   commit();
 }
@@ -922,13 +948,13 @@ function tick(){
     }
     document.title='(!) Take '+due.map(function(o){return o.r.name}).join(', ');
   }else{
-    if(alarmKey){
+    if(alarmKey||document.querySelector('#alarm-host .overlay.alarm:not(.closing)')){
       alarmKey='';
       if(ALARM_ONLY){
         document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipEl('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div><button class="btn" id="al-close">Close</button></div></div>';
         lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',30);
         document.getElementById('al-close').onclick=function(){window.close()};
-        setTimeout(function(){if(!dueList().length)window.close()},2500);
+        setTimeout(function(){if(!dueList().length)window.close()},3200);
       }else{
         var ov=document.querySelector('#alarm-host .overlay');
         if(ov&&!reducedMotion()){ov.classList.add('closing');setTimeout(function(){if(!alarmKey)document.getElementById('alarm-host').innerHTML=''},330)}
@@ -971,7 +997,7 @@ function renderSound(){
   el.innerHTML=soundOn()
     ?'<span class="chip good">'+(DESKTOP?'Sound by desktop app':'Sound on')+'</span><button class="btn sm" data-act="sound">Test sound</button>'
     :'<button class="btn danger" data-act="sound">Sound is off: tap to turn on</button>';
-  if(alarmKey){alarmKey='';tick()}
+  if(alarmKey&&dueList().length){alarmKey='';tick()}
 }
 function renderToday(){
   var el=document.getElementById('today');if(!el)return;
