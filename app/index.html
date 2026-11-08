@@ -264,7 +264,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 <div id="alarm-host"></div>
 <div id="welcome-host"></div>
 <div id="buddy-host"></div>
-<script type="application/json" id="state">{"v":1,"settings":{"allowance":50,"save":40,"goalName":"First $1,000","goalAmount":1000},"vault":11,"wallet":0,"log":[{"t":1794112401686,"k":"bonus","a":11,"n":"found it"}],"ach":{},"updated":1794112401686}</script>
+<script type="application/json" id="state">{}</script>
 <script id="app">
 (function(){
 var ALL=[0,1,2,3,4,5,6],DAYN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -320,7 +320,7 @@ function normalize(s){
     if(s.parent&&typeof s.parent==='object'){var ev=Object.assign(d.parent.ev,s.parent.ev||{});d.parent=Object.assign(d.parent,s.parent);d.parent.ev=ev}
     if(s.snz&&typeof s.snz==='object')d.snz=s.snz;
   }
-  if(!d.reminders){d.reminders=defaultReminders();d.mig3=true}
+  if(!d.reminders){d.reminders=defaultReminders();d.mig3=true;d.mig4=true}
   migrate(d);
   return d;
 }
@@ -653,6 +653,16 @@ var ACT={
   sound:function(){unlock();setTimeout(function(){play('chime');renderSound()},80)},
   settings:function(){saveSettings(document.getElementById('st-form'))},
   tour:function(){showWelcome(true)},
+  resetall:function(){
+    modal({title:'Start completely fresh?',ok:'Erase everything',danger:true,
+      body:'<div class="warnbox">This erases everything: savings, history, reminders, doses, advancements, parent updates and settings. Pixel Life goes back to how it was the first time you opened it.</div><label for="ra-c">Type RESET to confirm<input id="ra-c" autocomplete="off"></label>',
+      gate:function(f){return val(f,'ra-c').trim().toUpperCase()==='RESET'},
+      submit:function(){
+        try{localStorage.removeItem(LS);localStorage.removeItem(SEEN);localStorage.removeItem(SNZ)}catch(e){}
+        state=normalize(null);anim={xp:0,wallet:0,vault:0};lastLevel=0;settingsOpen=false;parentOpen=false;
+        commit();welcomeShown=false;setTimeout(function(){showWelcome(false)},250);
+      }});
+  },
   pnew:function(){
     var go=function(){state.parent.topic=newTopic();parentOpen=true;commit()};
     if(!state.parent.topic)return go();
@@ -953,7 +963,7 @@ function render(){
     '<label class="check" for="st-sfx"><input type="checkbox" id="st-sfx"'+(state.fx.sound?' checked':'')+'> Sound effects</label>'+
     '<label class="check" for="st-burst"><input type="checkbox" id="st-burst"'+(state.fx.burst?' checked':'')+'> Gem bursts</label>'+
     '<label class="check" for="st-buddy"><input type="checkbox" id="st-buddy"'+(state.fx.buddy?' checked':'')+'> Pip the helper</label>'+
-    '</form><p class="err" id="st-err" role="alert"></p><div class="row"><button class="btn primary" data-act="settings"'+dis+'>Save settings</button><button class="btn danger" data-act="reset"'+dis+'>Reset savings</button></div></details></section>'+
+    '</form><p class="err" id="st-err" role="alert"></p><div class="row"><button class="btn primary" data-act="settings"'+dis+'>Save settings</button><button class="btn danger" data-act="reset"'+dis+'>Reset savings</button><button class="btn danger" data-act="resetall"'+dis+'>Start fresh</button></div></details></section>'+
   '</div><div class="toasts" id="toasts" aria-live="polite"></div>';
   document.getElementById('st-details').addEventListener('toggle',function(){settingsOpen=this.open});
   var pd=document.getElementById('pa-details');if(pd)pd.addEventListener('toggle',function(){parentOpen=this.open});
