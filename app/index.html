@@ -207,6 +207,38 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .tutnav{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .tutnav .row{margin:0}
 .keys{color:var(--muted);font-size:18px;text-align:center}
+/* fun layer */
+#fx-cv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:95}
+.floater{position:fixed;z-index:96;pointer-events:none;font-family:var(--display);font-size:13px;color:var(--diamond);text-shadow:2px 2px 0 #000;transform:translate(-50%,-50%);animation:floatup 1.1s ease-out forwards;white-space:nowrap}
+.floater.gold{color:var(--gold)}.floater.red{color:var(--red)}.floater.green{color:var(--xp)}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,-30%) scale(.8)}15%{opacity:1;transform:translate(-50%,-60%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-260%) scale(1)}}
+.lvlup{position:fixed;inset:0;z-index:94;display:grid;place-items:center;background:rgba(0,0,0,.45);animation:fade .2s ease-out;cursor:pointer}
+.lvlup-box{text-align:center;display:grid;gap:10px;animation:pop .4s cubic-bezier(.2,.9,.3,1.4)}
+.lvlup-box .t{font-family:var(--display);font-size:clamp(26px,6vw,44px);color:var(--xp);text-shadow:4px 4px 0 #2a4a0c,8px 8px 0 #000}
+.lvlup-box .n{font-family:var(--display);font-size:16px;color:var(--gold);text-shadow:2px 2px 0 #000}
+.slot svg{transition:transform .15s}
+.slot:hover svg{transform:translateY(-3px) scale(1.12)}
+.slot svg.spin{animation:spin .6s steps(8)}
+@keyframes spin{to{transform:rotateY(360deg)}}
+.a.on:hover{box-shadow:inset 0 0 0 2px #000,0 0 0 3px rgba(245,197,66,.35)}
+.buddy{position:fixed;right:18px;bottom:18px;z-index:60;display:grid;justify-items:end;gap:8px;pointer-events:none}
+.buddy-btn{pointer-events:auto;background:none;border:0;padding:0;cursor:pointer;width:76px;height:70px;position:relative}
+.buddy-btn:focus-visible{outline:3px solid var(--diamond);outline-offset:4px}
+.buddy-btn svg{width:76px;height:70px;animation:idle 1.6s steps(2) infinite;filter:drop-shadow(0 6px 0 rgba(0,0,0,.4))}
+.buddy[data-mood="alert"] .buddy-btn svg{animation:alertb .45s steps(2) infinite}
+.buddy[data-mood="party"] .buddy-btn svg{animation:party .5s ease-in-out infinite}
+.buddy[data-mood="sleepy"] .buddy-btn svg{animation:idle 3s steps(2) infinite}
+.buddy-btn.hop svg{animation:hop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes idle{50%{transform:translateY(-3px)}}
+@keyframes alertb{50%{transform:translateY(-8px)}}
+@keyframes party{25%{transform:translateY(-10px) rotate(-6deg)}75%{transform:translateY(-10px) rotate(6deg)}}
+@keyframes hop{40%{transform:translateY(-22px) scaleY(1.08)}80%{transform:translateY(2px) scaleY(.9)}}
+.zzz{position:absolute;top:-6px;left:-4px;font-family:var(--display);font-size:10px;color:var(--muted);animation:zz 2s ease-in-out infinite}
+@keyframes zz{50%{transform:translate(-4px,-6px);opacity:.5}}
+.bubble{pointer-events:auto;max-width:250px;background:#f2f2f6;color:#141418;border:3px solid #000;box-shadow:inset -3px -3px 0 #bdbdc8;padding:8px 12px;font-size:20px;line-height:1.1;position:relative;animation:pop .22s cubic-bezier(.2,.9,.3,1.3)}
+.bubble::after{content:"";position:absolute;right:26px;bottom:-11px;width:12px;height:12px;background:#f2f2f6;border-right:3px solid #000;border-bottom:3px solid #000;transform:rotate(45deg)}
+.bubble.hide{display:none}
+@media (max-width:420px){.buddy-btn,.buddy-btn svg{width:58px;height:54px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:760px){
   .tiles{grid-template-columns:1fr}
@@ -226,6 +258,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 <div id="modal-host"></div>
 <div id="alarm-host"></div>
 <div id="welcome-host"></div>
+<div id="buddy-host"></div>
 <script type="application/json" id="state">{"v":1,"settings":{"allowance":50,"save":40,"goalName":"First $1,000","goalAmount":1000},"vault":11,"wallet":0,"log":[{"t":1794112401686,"k":"bonus","a":11,"n":"found it"}],"ach":{},"updated":1794112401686}</script>
 <script id="app">
 (function(){
@@ -265,7 +298,7 @@ function migrate(d){
 }
 function normalize(s){
   var d={v:2,settings:{allowance:50,save:40,goalName:'First $1,000',goalAmount:1000},vault:0,wallet:0,log:[],ach:{},updated:0,
-    reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now()};
+    reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now(),fx:{sound:true,buddy:true,burst:true}};
   if(s&&typeof s==='object'){
     d.settings=Object.assign(d.settings,s.settings||{});
     ['vault','wallet','updated','created'].forEach(function(k){if(typeof s[k]==='number')d[k]=s[k]});
@@ -277,6 +310,7 @@ function normalize(s){
     if(s.mig3)d.mig3=true;
     if(s.mig4)d.mig4=true;
     if(s.onboarded)d.onboarded=true;
+    if(s.fx&&typeof s.fx==='object')d.fx=Object.assign(d.fx,s.fx);
     if(s.snz&&typeof s.snz==='object')d.snz=s.snz;
   }
   if(!d.reminders){d.reminders=defaultReminders();d.mig3=true}
@@ -461,7 +495,7 @@ function showToasts(){
       if(Date.now()-ts<10*60*1000){
         var el=document.createElement('div');el.className='toast';el.setAttribute('role','status');
         el.innerHTML=gem()+'<div><div class="t1">Advancement made!</div><div class="t2">'+esc(a.n)+'</div></div>';
-        host.appendChild(el);setTimeout(function(){el.remove()},5000);
+        host.appendChild(el);setTimeout(function(){el.remove()},5000);sfx('level');burst('gem',22);
       }
     }
   });
@@ -502,7 +536,7 @@ function pollDesk(first){
   fetch('/api/state',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
     if(statusMsg&&/desktop app/i.test(statusMsg)){statusMsg='';renderStatus()}
     if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();maybeWelcome()}return}
-    if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);render();tick()}
+    if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy()}
     else if(first&&(state.updated||0)>(d.updated||0))flushDesk();
     if(first)maybeWelcome();
   }).catch(function(){statusMsg='Lost the desktop app. Reopen Pixel Life.exe.';renderStatus()});
@@ -516,7 +550,10 @@ function commit(){
   var nowms=Date.now();Object.keys(SZ()).forEach(function(k){if(SZ()[k]<nowms)delete SZ()[k]});
   state.updated=Date.now();
   lsSet(LS,JSON.stringify(state));
-  render();scheduleFlush();showToasts();tick();
+  var lvlNow=Math.floor(state.vault/100);
+  if(lastLevel!==null&&lvlNow>lastLevel)setTimeout(function(){levelUp(lvlNow)},350);
+  lastLevel=lvlNow;
+  render();scheduleFlush();showToasts();tick();updateBuddy();
 }
 function adoptLocal(){
   var local=null;try{local=JSON.parse(lsGet(LS))}catch(e){}
@@ -549,6 +586,7 @@ function doPay(){
   var s=state.settings,sp=spendAmt();
   state.vault=round(state.vault+s.save);state.wallet=round(state.wallet+sp);
   state.log.push({t:Date.now(),k:'pay',a:s.allowance,n:'Payday: '+fmt(s.save)+' to vault, '+fmt(sp)+' to wallet'});
+  celebrate('pay',fmt(s.save));
   commit();
 }
 var ACT={
@@ -564,7 +602,7 @@ var ACT={
         var a=amt(val(f,'sp-a'));if(!a)return 'Enter an amount above $0.';
         if(a>state.wallet+1e-9)return 'You only have '+fmt(state.wallet)+' in your wallet. Wait for payday instead of breaking the vault.';
         state.wallet=round(state.wallet-a);
-        state.log.push({t:Date.now(),k:'spend',a:a,n:val(f,'sp-n').trim()||'Spent'});commit();
+        state.log.push({t:Date.now(),k:'spend',a:a,n:val(f,'sp-n').trim()||'Spent'});floater('-'+fmt(a),'gold');sfx('click');commit();
       }});
   },
   bonus:function(){
@@ -573,14 +611,14 @@ var ACT={
       submit:function(f){
         var a=amt(val(f,'bo-a'));if(!a)return 'Enter an amount above $0.';
         state.vault=round(state.vault+a);
-        state.log.push({t:Date.now(),k:'bonus',a:a,n:val(f,'bo-n').trim()||'Bonus money'});commit();
+        state.log.push({t:Date.now(),k:'bonus',a:a,n:val(f,'bo-n').trim()||'Bonus money'});celebrate('bonus',fmt(a));commit();
       }});
   },
   sweep:function(){
     var w=state.wallet;
     modal({title:'Move leftovers to the vault',ok:'Move '+fmt(w),
       body:'<p>Move all '+fmt(w)+' left in your wallet into the vault? You can\'t spend it after this.</p>',
-      submit:function(){state.vault=round(state.vault+w);state.wallet=0;state.log.push({t:Date.now(),k:'sweep',a:w,n:'Leftover wallet money'});commit()}});
+      submit:function(){state.vault=round(state.vault+w);state.wallet=0;state.log.push({t:Date.now(),k:'sweep',a:w,n:'Leftover wallet money'});celebrate('bonus',fmt(w));commit()}});
   },
   brk:function(){
     var s=state.settings;
@@ -594,7 +632,7 @@ var ACT={
         var a=amt(val(f,'br-a'));if(!a)return 'Enter an amount above $0.';
         if(a>state.vault+1e-9)return 'The vault only has '+fmt(state.vault)+'.';
         state.vault=round(state.vault-a);
-        state.log.push({t:Date.now(),k:'break',a:a,n:'Vault break: '+val(f,'br-n').trim()});commit();
+        state.log.push({t:Date.now(),k:'break',a:a,n:'Vault break: '+val(f,'br-n').trim()});floater('-'+fmt(a),'red');burst('red',14);sfx('break');say('The vault is open. You can refill it next payday!');commit();
       }});
   },
   reset:function(){
@@ -618,11 +656,16 @@ function saveSettings(f){
   if(!(rep>=5&&rep<=300))return err.textContent='Repeat the alarm every 5 to 300 seconds.';
   state.settings={allowance:al,save:round(sv),goalName:gn||'My goal',goalAmount:ga};
   state.alarm={volume:isFinite(vol)?Math.max(0,Math.min(100,vol)):80,repeat:rep};
+  state.fx={sound:f.querySelector('#st-sfx').checked,burst:f.querySelector('#st-burst').checked,buddy:f.querySelector('#st-buddy').checked};
   err.textContent='';commit();
 }
 
 /* ---------- reminder actions ---------- */
-function setDose(key,s){state.doses[key]={s:s,t:Date.now()};delete SZ()[key];commit()}
+function setDose(key,s){
+  state.doses[key]={s:s,t:Date.now()};delete SZ()[key];
+  if(s==='taken'){var r=findRem(idOfKey(key));celebrate('taken',r?r.name:'')}else sfx('click');
+  commit();
+}
 function undoDose(key){delete state.doses[key];commit()}
 function snooze(key){var r=findRem(idOfKey(key));if(!r)return;SZ()[key]=Date.now()+(r.snooze||10)*60000;lastRing=0;commit()}
 function editReminder(id){
@@ -848,6 +891,10 @@ function render(){
     '<h3>Alarm sound</h3>'+
     '<label for="st-vol">Volume<input type="range" id="st-vol" min="0" max="100" value="'+state.alarm.volume+'"></label>'+
     '<label for="st-rep">Repeat every (seconds)<input id="st-rep" inputmode="numeric" value="'+state.alarm.repeat+'"></label>'+
+    '<h3>Fun stuff</h3>'+
+    '<label class="check" for="st-sfx"><input type="checkbox" id="st-sfx"'+(state.fx.sound?' checked':'')+'> Sound effects</label>'+
+    '<label class="check" for="st-burst"><input type="checkbox" id="st-burst"'+(state.fx.burst?' checked':'')+'> Gem bursts</label>'+
+    '<label class="check" for="st-buddy"><input type="checkbox" id="st-buddy"'+(state.fx.buddy?' checked':'')+'> Pip the helper</label>'+
     '</form><p class="err" id="st-err" role="alert"></p><div class="row"><button class="btn primary" data-act="settings"'+dis+'>Save settings</button><button class="btn danger" data-act="reset"'+dis+'>Reset savings</button></div></details></section>'+
   '</div><div class="toasts" id="toasts" aria-live="polite"></div>';
   document.getElementById('st-details').addEventListener('toggle',function(){settingsOpen=this.open});
@@ -856,7 +903,11 @@ function render(){
   animateTo(pct,walletPct,state.vault);
 }
 document.addEventListener('click',function(e){
+  lastPt={x:e.clientX,y:e.clientY,t:Date.now()};
+  var g=e.target.closest('.slot svg');
+  if(g){g.classList.remove('spin');void g.getBoundingClientRect();g.classList.add('spin');sfx('coin');burst('gem',6);return}
   var b=e.target.closest('button');if(!b||b.disabled)return;
+  if(!b.hasAttribute('data-dose')&&!b.closest('.buddy'))sfx('click');
   if(b.hasAttribute('data-dose'))return setDose(b.getAttribute('data-key'),b.getAttribute('data-dose'));
   if(b.hasAttribute('data-undo'))return undoDose(b.getAttribute('data-undo'));
   if(b.hasAttribute('data-snooze'))return snooze(b.getAttribute('data-snooze'));
@@ -864,6 +915,120 @@ document.addEventListener('click',function(e){
   var a=b.getAttribute('data-act');if(a&&ACT[a])ACT[a]();
 });
 document.addEventListener('submit',function(e){if(e.target.id==='st-form'){e.preventDefault();saveSettings(e.target)}});
+
+/* ---------- fun: sounds, bursts, floaters, level-ups, Pip ---------- */
+var lastPt={x:0,y:0,t:0},lastLevel=null,fxParts=[],fxRaf=0,recentWin=0;
+function pt(){
+  if(Date.now()-lastPt.t<1500&&(lastPt.x||lastPt.y))return {x:lastPt.x,y:lastPt.y};
+  return {x:innerWidth/2,y:innerHeight/2};
+}
+function sfx(name){
+  if(!state.fx||!state.fx.sound||!actx)return;
+  try{if(actx.state!=='running')actx.resume()}catch(e){}
+  var v=Math.max(0.001,(state.alarm.volume/100)*0.35),t=actx.currentTime+0.01;
+  if(name==='click'){tone(740,t,0.05,'square',v*0.35)}
+  else if(name==='coin'){tone(988,t,0.07,'square',v*0.45);tone(1319,t+0.07,0.22,'square',v*0.45)}
+  else if(name==='taken'){[659.25,880,1318.5].forEach(function(f,i){tone(f,t+i*0.07,0.22,'triangle',v)})}
+  else if(name==='level'){[523.25,659.25,783.99,1046.5,1318.5].forEach(function(f,i){tone(f,t+i*0.09,0.3,'square',v*0.5)})}
+  else if(name==='break'){[440,330,247,185].forEach(function(f,i){tone(f,t+i*0.09,0.18,'sawtooth',v*0.4)})}
+  else if(name==='pip'){tone(1046.5,t,0.06,'sine',v);tone(1568,t+0.06,0.1,'sine',v)}
+}
+function floater(text,cls){
+  var p=pt(),el=document.createElement('div');
+  el.className='floater '+(cls||'');el.textContent=text;el.style.left=p.x+'px';el.style.top=p.y+'px';
+  document.body.appendChild(el);setTimeout(function(){el.remove()},1200);
+}
+function burst(kind,n){
+  if(!state.fx||!state.fx.burst||reducedMotion())return;
+  var cv=document.getElementById('fx-cv');
+  if(!cv){cv=document.createElement('canvas');cv.id='fx-cv';cv.setAttribute('aria-hidden','true');document.body.appendChild(cv)}
+  cv.width=innerWidth;cv.height=innerHeight;
+  var p=pt(),cols=kind==='red'?['#ff5c5c','#a83232','#ffb3b3']:kind==='gold'?['#f5c542','#ffe28a','#c99a1a']:['#4aedd9','#a8fdf0','#80d42a','#f5c542'];
+  for(var i=0;i<(n||18);i++){
+    fxParts.push({x:p.x,y:p.y,vx:(Math.random()-.5)*9,vy:-3-Math.random()*7,life:55+Math.random()*25,gem:kind==='gem'&&i%3===0,c:cols[i%cols.length],s:4+Math.floor(Math.random()*2)*2});
+  }
+  if(!fxRaf)fxRaf=requestAnimationFrame(fxFrame);
+}
+var GEMC={X:'#0b3532',L:'#a8fdf0',W:'#ffffff',M:'#4aedd9',D:'#259a8c'};
+function fxFrame(){
+  var cv=document.getElementById('fx-cv');if(!cv){fxRaf=0;return}
+  var ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
+  fxParts=fxParts.filter(function(q){return q.life>0});
+  fxParts.forEach(function(q){
+    q.x+=q.vx;q.y+=q.vy;q.vy+=0.32;q.vx*=0.99;q.life--;
+    ctx.globalAlpha=Math.min(1,q.life/20);
+    if(q.gem){
+      GEM.forEach(function(row,y){for(var x=0;x<row.length;x++){var ch=row[x];if(ch!=='.'){ctx.fillStyle=GEMC[ch];ctx.fillRect(Math.round(q.x)+x*3,Math.round(q.y)+y*3,3,3)}}});
+    }else{ctx.fillStyle=q.c;ctx.fillRect(Math.round(q.x),Math.round(q.y),q.s,q.s)}
+  });
+  ctx.globalAlpha=1;
+  if(fxParts.length)fxRaf=requestAnimationFrame(fxFrame);else{fxRaf=0;ctx.clearRect(0,0,cv.width,cv.height)}
+}
+var CHEERS=['Nice job!','Great work!','Another one done!','You got this!','Way to go!','Keep it up!'];
+function celebrate(kind,detail){
+  recentWin=Date.now();
+  if(kind==='taken'){burst('gem',20);floater('+1 done!','green');sfx('taken');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+' is checked off.':''))}
+  else if(kind==='pay'){burst('gold',26);floater('+'+detail+' saved','');sfx('coin');say('Ka-ching! '+detail+' went into your vault.')}
+  else if(kind==='bonus'){burst('gem',18);floater('+'+detail,'');sfx('coin');say('Bonus loot! '+detail+' is locked away.')}
+}
+function levelUp(n){
+  sfx('level');recentWin=Date.now();
+  var el=document.createElement('div');el.className='lvlup';el.setAttribute('role','status');
+  el.innerHTML='<div class="lvlup-box"><div class="t">LEVEL UP!</div><div class="n">You reached level '+n+'</div><div class="muted">That\'s '+fmt(n*100)+' saved. Click to keep going.</div></div>';
+  document.body.appendChild(el);
+  lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',20);
+  var done=function(){el.remove()};el.onclick=done;setTimeout(done,2600);
+  say('Level '+n+'! You are getting good at this.');
+}
+/* Pip, an original pixel helper */
+var PIP=['....XXXX....','..XXHHLLXX..','.XHWHLLLLDX.','.XHHLLLLLDX.','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLDDX','.XLLLLLLDDX.','..XXDDDDXX..','....XXXX....'];
+var PIPC={X:'#0b3532',H:'#a8fdf0',W:'#ffffff',L:'#4aedd9',D:'#259a8c',E:'#0b1a1a',R:'#0b3532',P:'#ff8fb1'};
+var FACES={
+  happy:[[3,5,'E'],[3,6,'E'],[8,5,'E'],[8,6,'E'],[5,7,'R'],[6,7,'R'],[2,7,'P'],[9,7,'P']],
+  alert:[[3,4,'E'],[3,5,'E'],[3,6,'E'],[8,4,'E'],[8,5,'E'],[8,6,'E'],[5,7,'R'],[6,7,'R'],[5,8,'R'],[6,8,'R']],
+  sleepy:[[3,6,'E'],[4,6,'E'],[7,6,'E'],[8,6,'E'],[5,8,'R'],[6,8,'R']],
+  party:[[2,6,'E'],[3,5,'E'],[4,6,'E'],[7,6,'E'],[8,5,'E'],[9,6,'E'],[4,7,'R'],[5,8,'R'],[6,8,'R'],[7,7,'R'],[2,7,'P'],[9,7,'P']]
+};
+function pipSvg(mood){
+  var grid=PIP.map(function(r){return r.split('')});
+  (FACES[mood]||FACES.happy).forEach(function(f){grid[f[1]][f[0]]=f[2]});
+  var r='';grid.forEach(function(row,y){row.forEach(function(ch,x){if(ch!=='.')r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+PIPC[ch]+'"/>'})});
+  return '<svg viewBox="0 0 12 11" shape-rendering="crispEdges" aria-hidden="true">'+r+'</svg>';
+}
+var pipMood='',bubbleTimer=0;
+function buddyMood(){
+  if(dueList().length)return 'alert';
+  if(Date.now()-recentWin<120000)return 'party';
+  var h=new Date().getHours();if(h>=23||h<6)return 'sleepy';
+  return 'happy';
+}
+function updateBuddy(){
+  var host=document.getElementById('buddy-host');if(!host)return;
+  if(!state.fx||!state.fx.buddy){host.innerHTML='';pipMood='';return}
+  if(!host.firstChild){
+    host.innerHTML='<div class="buddy"><div class="bubble hide" id="pip-say" role="status" aria-live="polite"></div><button class="buddy-btn" id="pip" aria-label="Pip the helper. Click for a tip."></button></div>';
+    host.querySelector('#pip').onclick=function(){
+      var b=this;b.classList.remove('hop');void b.offsetWidth;b.classList.add('hop');sfx('pip');say(tip());
+    };
+  }
+  var m=buddyMood();
+  if(m!==pipMood){
+    pipMood=m;host.querySelector('.buddy').setAttribute('data-mood',m);
+    host.querySelector('#pip').innerHTML=pipSvg(m)+(m==='sleepy'?'<span class="zzz">z z</span>':'');
+    if(m==='alert'){var d=dueList();if(d.length)say('Hey! Time for '+d[0].r.name+'!')}
+  }
+}
+function tip(){
+  var s=state.settings,pct=Math.floor(Math.max(0,Math.min(100,state.vault/s.goalAmount*100)));
+  var tips=['Press Taken when you take your meds. I\'ll cheer!','Every $10 you save is a diamond in your inventory.','Leftover wallet money? Move it to the vault for bonus loot.','You are '+pct+'% of the way to '+s.goalName+'.','Keep your phone alarms on too, especially at night.','Click a diamond in your inventory. Go on!','Each $100 saved is a new level.','Want the tour again? Press Tutorial at the top.'];
+  var d=dueList();if(d.length)return 'You still need to take '+d[0].r.name+'!';
+  return tips[Math.floor(Math.random()*tips.length)];
+}
+function say(text){
+  var el=document.getElementById('pip-say');if(!el)return;
+  el.textContent=text;el.classList.remove('hide');el.style.animation='none';void el.offsetWidth;el.style.animation='';
+  clearTimeout(bubbleTimer);bubbleTimer=setTimeout(function(){el.classList.add('hide')},5000);
+}
 
 /* ---------- welcome + tutorial ---------- */
 var welcomeShown=false,tutStep=0,wlRaf=0;
@@ -885,6 +1050,8 @@ function slides(){
      d:'<div class="demo"><div class="actions"><span class="btn">Spend from wallet</span><span class="btn">Move leftovers to vault</span><span class="btn danger">Break the vault</span></div></div>'},
     {h:'Level up',p:'Every $100 saved is a level on your goal bar. Every $10 is a diamond in your inventory. Unlock advancements for streaks, goals and taking every reminder.',
      d:'<div class="demo"><div class="xpwrap"><span class="lvl">3</span><div class="xp"><i style="width:38%"></i></div></div><div class="gemrow">'+gem()+gem()+gem()+gem()+gem()+'</div></div>'},
+    {h:'Meet Pip',p:'Pip is your pixel helper in the corner. Pip cheers when you take your meds or save money, warns you when something is due, and gives tips when you click. You can turn Pip, sounds and gem bursts off in Settings.',
+     d:'<div class="demo" style="justify-items:center"><div style="width:80px;height:74px">'+pipSvg('party')+'</div></div>'},
     {h:'One last thing',p:'Pixel Life can only sound alarms while '+(DESKTOP?'your PC is on and awake':'this page is open and your device is awake')+'. Keep alarms on your phone and your Dexcom alerts turned on as a backup, especially overnight.',
      d:'<div class="demo"><div class="chips"><span class="chip good">Pixel Life</span><span class="chip good">Phone alarms</span><span class="chip good">Dexcom alerts</span></div></div>'}
   ];
@@ -957,7 +1124,8 @@ function startParticles(){
 /* ---------- start ---------- */
 adoptLocal();
 render();
-setInterval(function(){tick();renderToday()},5000);
+setInterval(function(){tick();renderToday();updateBuddy()},5000);
+updateBuddy();lastLevel=Math.floor(state.vault/100);
 setTimeout(maybeWelcome,6000);
 document.addEventListener('visibilitychange',function(){tick();renderToday()});
 tick();
@@ -969,7 +1137,7 @@ function subscribe(){
     if(snap.exists){
       var d=snap.data()||{};
       if(!snap.metadata.hasPendingWrites&&(d.updated||0)>(state.updated||0)){
-        state=normalize(clone(d));lsSet(LS,JSON.stringify(state));render();tick();
+        state=normalize(clone(d));lsSet(LS,JSON.stringify(state));lastLevel=Math.floor(state.vault/100);render();tick();updateBuddy();
       }else if(!loaded&&(state.updated||0)>(d.updated||0)){scheduleFlush()}
       loaded=true;maybeWelcome();
     }else if(!snap.metadata.fromCache&&!loaded){
