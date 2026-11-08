@@ -750,6 +750,7 @@ var ACT={
   sound:function(){unlock();setTimeout(function(){play('chime');renderSound()},80)},
   settings:function(){saveSettings(document.getElementById('st-form'))},
   tour:function(){showWelcome(true)},
+  voicetest:function(){say('Woof woof! Hi! I\'m Pip! This is my super excited voice! Woohoo!',true)},
   resetall:function(){
     modal({title:'Start completely fresh?',ok:'Erase everything',danger:true,
       body:'<div class="warnbox">This erases everything: savings, history, reminders, doses, advancements, parent updates and settings. Pixel Life goes back to how it was the first time you opened it.</div><label for="ra-c">Type RESET to confirm<input id="ra-c" autocomplete="off"></label>',
@@ -835,7 +836,7 @@ function successStamp(n){
   var nm=state.profile&&state.profile.name;
   el.innerHTML='<div class="stamp">SUCCESS!<small>'+(n>1?n+' reminders done':'Reminder done')+(nm?', nice work '+esc(nm)+'!':'!')+'</small></div>';
   document.body.appendChild(el);
-  sfx('level');speak(n>1?'Success! '+n+' things done! You\'re amazing!':'Success! You\'re amazing!');
+  sfx('level');speak(n>1?'Success! Woohoo! '+n+' things done! You\'re amazing!':'Success! Woohoo! You\'re amazing!',true);
   setTimeout(function(){
     var t=document.getElementById('root');if(t&&!reducedMotion()){t.classList.remove('shake');void t.offsetWidth;t.classList.add('shake')}
     var ah=document.querySelector('#alarm-host .overlay');if(ah&&!reducedMotion()){ah.classList.remove('shake');void ah.offsetWidth;ah.classList.add('shake')}
@@ -1131,7 +1132,7 @@ function render(){
     '<label class="check" for="st-sfx"><input type="checkbox" id="st-sfx"'+(state.fx.sound?' checked':'')+'> Sound effects</label>'+
     '<label class="check" for="st-burst"><input type="checkbox" id="st-burst"'+(state.fx.burst?' checked':'')+'> Gem bursts</label>'+
     '<label class="check" for="st-buddy"><input type="checkbox" id="st-buddy"'+(state.fx.buddy?' checked':'')+'> Pip the helper</label>'+
-    '<label class="check" for="st-voice"><input type="checkbox" id="st-voice"'+(state.fx.voice!==false?' checked':'')+'> Pip talks out loud</label>'+
+    '<label class="check" for="st-voice"><input type="checkbox" id="st-voice"'+(state.fx.voice!==false?' checked':'')+'> Pip talks out loud <button type="button" class="btn sm" data-act="voicetest">Test voice</button></label>'+
     '</form><p class="err" id="st-err" role="alert"></p><div class="row"><button class="btn primary" data-act="settings"'+dis+'>Save settings</button><button class="btn danger" data-act="reset"'+dis+'>Reset savings</button><button class="btn danger" data-act="resetall"'+dis+'>Start fresh</button></div></details></section>'+
   '</div><div class="toasts" id="toasts" aria-live="polite"></div>';
   document.getElementById('st-details').addEventListener('toggle',function(){settingsOpen=this.open});
@@ -1185,7 +1186,7 @@ function checkAllDone(){
   var today=keyOf(new Date());
   if(all&&state.lastAllDone!==today){
     state.lastAllDone=today;
-    setTimeout(function(){confetti(120);sfx('level');say('Everything is done for now! You rock'+(state.profile.name?', '+state.profile.name:'')+'!')},700);
+    setTimeout(function(){confetti(120);sfx('level');say('Woohoo! Everything is done! You rock'+(state.profile.name?', '+state.profile.name:'')+'!',true)},700);
   }
 }
 function confetti(n){
@@ -1268,12 +1269,12 @@ function notifyParent(type,title,msg){
 }
 function kidName(){return (state.parent&&state.parent.kid)||(state.profile&&state.profile.name)||'Your kid'}
 function medName(n){return state.parent&&state.parent.hide?'a reminder':n}
-var CHEERS=['Woohoo! You did it!','Yay! Awesome job!','High five!','You\'re a superstar!','Boom! Nailed it!','Wow, look at you go!','That\'s the spirit!'];
+var CHEERS=['Woohoo! You did it!','Woof woof! Pawsome job!','Yay yay yay! High five!','You\'re a superstar!','Boom! Nailed it!','Wowee, look at you go!','Yippee! That was amazing!'];
 function celebrate(kind,detail){
   recentWin=Date.now();pipSpinUntil=Date.now()+900;
-  if(kind==='taken'){if(Date.now()-leaveFxAt>1500){burst('gem',20);sfx('taken')}floater('Done!','green');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+', done!':''))}
-  else if(kind==='pay'){burst('gold',26);floater('+'+detail+' saved','');sfx('coin');say('Ka-ching! '+detail+' is safe in your vault. You\'re getting rich!')}
-  else if(kind==='bonus'){burst('gem',18);floater('+'+detail,'');sfx('coin');say('Ooh, bonus loot! '+detail+' is locked away. Nice!')}
+  if(kind==='taken'){if(Date.now()-leaveFxAt>1500){burst('gem',20);sfx('taken')}floater('Done!','green');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+', done!':''),true)}
+  else if(kind==='pay'){burst('gold',26);floater('+'+detail+' saved','');sfx('coin');say('Ka-ching! '+detail+' is safe in your vault! You\'re getting rich!',true)}
+  else if(kind==='bonus'){burst('gem',18);floater('+'+detail,'');sfx('coin');say('Ooh ooh! Bonus loot! '+detail+' is locked away!',true)}
 }
 function levelUp(n){
   sfx('level');recentWin=Date.now();
@@ -1282,7 +1283,7 @@ function levelUp(n){
   document.body.appendChild(el);
   lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',20);confetti(90);
   var done=function(){el.remove()};el.onclick=done;setTimeout(done,2600);
-  say('Level '+n+'! Whoa, you\'re a saving champion!');
+  say('Level '+n+'! Woof! You\'re a saving champion!',true);
   notifyParent('level','Pixel Life',kidName()+' reached savings level '+n+' ('+fmt(n*100)+' saved)!');
 }
 /* Pip's voice: reads everything out loud (browser speech) and moves the mouth */
@@ -1301,19 +1302,20 @@ function pickVoice(){
 }
 try{if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=function(){pipVoice=pickVoice()}}catch(e){}
 function hush(){try{speechSynthesis.cancel()}catch(e){}pipSpeaking=false;pipTalkUntil=0}
-function speak(text){
+function speak(text,excited){
   text=String(text||'').replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim();if(!text)return;
   pipTalkUntil=Date.now()+Math.min(6000,500+text.length*55);  // mouth moves even without a voice
   if(!state.fx||state.fx.voice===false||!userActed||!('speechSynthesis' in window))return;
   try{
-    speechSynthesis.cancel();
     var u=new SpeechSynthesisUtterance(text);
     pipVoice=pipVoice||pickVoice();if(pipVoice)u.voice=pipVoice;
-    u.pitch=1.7;u.rate=1.08;u.volume=Math.max(0.2,(state.alarm.volume||80)/100);
+    u.pitch=excited?2:1.75;u.rate=excited?1.35:1.18;u.volume=Math.max(0.3,(state.alarm.volume||80)/100);
     u.onstart=function(){pipSpeaking=true};
     u.onend=u.onerror=function(){pipSpeaking=false;pipTalkUntil=Date.now()+150};
     u.onboundary=function(){pipMouthKick=(pipMouthKick+1)%3};
-    speechSynthesis.speak(u);
+    window._pipU=u;  // keeps the voice from being cut off early
+    var go=function(){try{speechSynthesis.resume();speechSynthesis.speak(u)}catch(e){}};
+    if(speechSynthesis.speaking||speechSynthesis.pending){speechSynthesis.cancel();setTimeout(go,120)}else go();
   }catch(e){}
 }
 
@@ -1321,36 +1323,39 @@ function speak(text){
 function pipEl(mood){return '<canvas class="pip3d" data-mood="'+mood+'" aria-hidden="true"></canvas>'}
 var PIP_MODELS={},pipMouse={x:-1,y:-1,t:0},pipSpinUntil=0;
 addEventListener('pointermove',function(e){pipMouse.x=e.clientX;pipMouse.y=e.clientY;pipMouse.t=Date.now()});
-function pipModel(mood,mouth){
-  var key=mood+'|'+(mouth||'');
+function pipModel(mood,mouth,wag){
+  var key=mood+'|'+(mouth||'')+'|'+(wag||0);
   if(PIP_MODELS[key])return PIP_MODELS[key];
-  var m={},C={body:'#2a9d8f',bodyd:'#1f7a6f',head:'#4aedd9',headl:'#8ff7ea',visor:'#0b1a1f',eye:'#c8fff8',gem:'#f5c542',chest:'#f5c542',foot:'#16584f',arm:'#3cc9b8',ear:'#80d42a'};
+  var m={},C={fur:'#d9a066',furd:'#b9813f',muz:'#f6dcb4',ear:'#7a4a24',nose:'#1d1411',eye:'#1d1411',spark:'#ffffff',collar:'#2a9d8f',tag:'#f5c542',tongue:'#ff7a9a',paw:'#f6dcb4',cheek:'#ff9fb5'};
   function put(x,y,z,c){m[x+','+y+','+z]=c}
   function box(x0,x1,y0,y1,z0,z1,c){for(var x=x0;x<=x1;x++)for(var y=y0;y<=y1;y++)for(var z=z0;z<=z1;z++)put(x,y,z,c)}
-  box(-2,-1,0,0,-1,0,C.foot);box(1,2,0,0,-1,0,C.foot);            // feet
-  box(-2,2,1,3,-1,1,C.body);                                        // body
-  box(-2,2,1,1,-1,1,C.bodyd);                                       // belt
-  put(0,2,1,C.chest);                                               // chest gem
-  box(-3,-3,2,3,0,0,C.arm);box(3,3,2,3,0,0,C.arm);                  // arms
-  box(-3,3,4,8,-2,2,C.head);                                        // head
-  box(-3,3,8,8,-2,2,C.headl);                                       // head top
-  box(-2,2,5,7,2,2,C.visor);                                        // visor (front)
-  put(-4,6,0,C.ear);put(4,6,0,C.ear);                               // ear lights
-  box(0,0,9,10,0,0,C.bodyd);put(0,11,0,C.gem);                      // antenna + gem
-  var E=C.eye,faces={
-    happy:[[-2,6],[-1,7],[1,7],[2,6]],
-    alert:[[-2,6],[-1,6],[-2,7],[-1,7],[1,6],[2,6],[1,7],[2,7]],
-    sleepy:[[-2,6],[-1,6],[1,6],[2,6]],
-    party:[[-2,6],[-1,7],[1,7],[2,6]]
+  // legs + paws
+  [[-2,1],[2,1],[-2,-3],[2,-3]].forEach(function(l){box(l[0],l[0],1,1,l[1],l[1],C.fur);put(l[0],0,l[1],C.paw)});
+  box(-2,2,2,4,-4,1,C.fur);                 // body
+  box(-1,1,2,2,-3,1,C.muz);                 // belly
+  box(-2,2,4,4,0,1,C.collar);put(0,3,2,C.tag); // collar + tag
+  box(-3,3,5,10,-1,3,C.fur);                // head
+  box(-3,3,10,10,-1,3,C.furd);              // top of head
+  box(-1,1,5,7,4,4,C.muz);                  // snout
+  put(0,7,5,C.nose);                        // nose
+  // ears: floppy, or perked up when something is due
+  if(mood==='alert'){box(-3,-2,11,12,1,1,C.ear);box(2,3,11,12,1,1,C.ear)}
+  else{box(-4,-4,6,9,0,1,C.ear);box(4,4,6,9,0,1,C.ear)}
+  // tail (wags)
+  var w=wag||0;put(0,4,-5,C.fur);put(w,5,-5,C.furd);put(w,6,-6,C.furd);
+  // eyes
+  var E=C.eye,S=C.spark,faces={
+    happy:[[-3,8,E],[-2,9,E],[-1,8,E],[1,8,E],[2,9,E],[3,8,E]],
+    party:[[-3,8,E],[-2,9,E],[-1,8,E],[1,8,E],[2,9,E],[3,8,E]],
+    alert:[[-3,8,E],[-2,8,E],[-3,9,S],[-2,9,E],[2,8,E],[3,8,E],[2,9,S],[3,9,E]],
+    sleepy:[[-3,8,E],[-2,8,E],[2,8,E],[3,8,E]]
   };
-  (faces[mood]||faces.happy).forEach(function(f){put(f[0],f[1],2,E)});
-  // mouth: a grin when quiet, wide open or half open while talking
-  var M='#ff8fb1',T='#ffd0dc';
-  if(mood!=='sleepy'){
-    if(mouth==='open'){put(-1,5,2,M);put(0,5,2,T);put(1,5,2,M);put(-2,6,2,mood==='happy'||mood==='party'?E:C.visor)}
-    else if(mouth==='mid'){put(-1,5,2,M);put(0,5,2,M);put(1,5,2,M)}
-    else{put(-1,5,2,E);put(0,5,2,E);put(1,5,2,E)}
-  }
+  (faces[mood]||faces.happy).forEach(function(f){put(f[0],f[1],3,f[2])});
+  if(mood!=='sleepy'){put(-3,6,3,C.cheek);put(3,6,3,C.cheek)}
+  // mouth: smile, or open with a tongue while talking / partying
+  if(mouth==='open'||(mood==='party'&&!mouth)){put(0,5,4,C.nose);put(0,4,4,C.tongue);put(0,3,4,C.tongue)}
+  else if(mouth==='mid'){put(0,5,4,C.tongue);put(0,4,4,C.tongue)}
+  else if(mood!=='sleepy'){put(-1,5,4,C.nose);put(1,5,4,C.nose)}
   var list=[];
   Object.keys(m).forEach(function(k){var p=k.split(',').map(Number);list.push({x:p[0],y:p[1],z:p[2],c:m[k]})});
   PIP_MODELS[key]={map:m,list:list};
@@ -1366,14 +1371,15 @@ function drawPip(cv,t){
   var W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
   var dpr=Math.min(2,window.devicePixelRatio||1);
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
-  var px=Math.max(2,Math.round(H/52)),w=Math.round(W/px),h=Math.round(H/px);
+  var px=Math.max(1,Math.round(cv.height/150)),w=Math.round(cv.width/px),h=Math.round(cv.height/px);
   if(!cv._low){cv._low=document.createElement('canvas')}
   var low=cv._low;if(low.width!==w||low.height!==h){low.width=w;low.height=h}
   var ctx=low.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);
   var mood=cv.getAttribute('data-mood')||'happy',still=reducedMotion(),talking=pipTalking();
   var mouth='';if(talking&&!still){var ph=Math.floor(t/110+(pipMouthKick||0))%3;mouth=ph===0?'open':ph===1?'mid':''}
-  var model=pipModel(mood,mouth);
   var sec=t/1000,yaw=0.45,bob=0;
+  var wag=still?0:Math.round(Math.sin(sec*(talking||mood==='party'||Date.now()<pipSpinUntil?16:5)));
+  var model=pipModel(mood,mouth,wag);
   if(!still){
     var r=cv.getBoundingClientRect(),follow=0;
     if(Date.now()-pipMouse.t<8000&&pipMouse.x>=0){follow=Math.max(-1,Math.min(1,(pipMouse.x-(r.left+r.width/2))/400))}
@@ -1382,19 +1388,16 @@ function drawPip(cv,t){
     if(mood==='party'||Date.now()<pipSpinUntil)yaw+=sec*5;
   }
   var cy=Math.cos(yaw),sy=Math.sin(yaw),ph=0.42,cp=Math.cos(ph),sp=Math.sin(ph);
-  var s=h/17.5,cx0=Math.round(w/2),cy0=Math.round(h*0.5),ccy=5.5;
+  var s=h/18.5,cx0=Math.round(w/2),cy0=Math.round(h*0.52),ccy=6;
   function rot(x,y,z){var X=x*cy+z*sy,Z=-x*sy+z*cy,Y=y;return [X,Y*cp-Z*sp,Y*sp+Z*cp]}
   function scr(x,y,z){var q=rot(x,y-ccy+bob,z);return [cx0+q[0]*s,cy0-q[1]*s,q[2]]}
   var vis=[];
   PIP_DIRS.forEach(function(d,i){var n=rot(d[0],d[1],d[2]);if(n[2]>0.02)vis.push({d:d,i:i,lum:0.62+0.38*Math.max(0,n[2]*0.55+n[1]*0.6+n[0]*-0.2)})});
   var items=model.list.map(function(v){var q=rot(v.x,v.y,v.z);return {v:v,z:q[2]}});
   items.sort(function(a,b){return a.z-b.z});
-  var glow=(mood==='alert'&&Math.floor(sec*4)%2===0);
 
   items.forEach(function(it){
     var v=it.v,col=v.c;
-    if(v.y===11&&v.x===0)col=mood==='alert'?(glow?'#ff5c5c':'#7a1f1f'):mood==='sleepy'?'#8a7a3a':'#f5c542';
-    if(col==='#c8fff8'&&mood==='sleepy')col='#4f8f88';
     vis.forEach(function(f){
       var d=f.d;if(model.map[(v.x+d[0])+','+(v.y+d[1])+','+(v.z+d[2])])return;
       var x=v.x-0.5,y=v.y,z=v.z-0.5,P;
@@ -1407,7 +1410,7 @@ function drawPip(cv,t){
       ctx.beginPath();
       P.forEach(function(p,j){var q=scr(p[0],p[1],p[2]);j?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});
       ctx.closePath();
-      var bright=(col==='#c8fff8'||(v.y===11&&mood!=='sleepy'))?1.15:f.lum;
+      var bright=(col==='#ffffff'||col==='#f5c542')?1.1:f.lum;
       ctx.fillStyle=shade(col,bright);ctx.fill();
     });
   });
@@ -1419,7 +1422,7 @@ function drawPip(cv,t){
   ctx.putImageData(img,0,0);
   // chunky ground shadow behind
   ctx.globalCompositeOperation='destination-over';ctx.fillStyle='rgba(0,0,0,.38)';
-  var g=scr(0,-0.3-bob,0);ctx.beginPath();ctx.ellipse(Math.round(g[0]),Math.round(g[1]),Math.round(s*3.4),Math.max(1,Math.round(s*1.1)),0,0,6.283);ctx.fill();
+  var g=scr(0,-0.3-bob,0);ctx.beginPath();ctx.ellipse(Math.round(g[0]),Math.round(g[1]),Math.round(s*4.2),Math.max(1,Math.round(s*1.4)),0,0,6.283);ctx.fill();
   ctx.globalCompositeOperation='source-over';
   var out=cv.getContext('2d');out.setTransform(1,0,0,1,0,0);out.clearRect(0,0,cv.width,cv.height);
   out.imageSmoothingEnabled=false;out.drawImage(low,0,0,cv.width,cv.height);
@@ -1476,8 +1479,8 @@ function tip(){
   var d=dueList();if(d.length)return 'Psst! '+d[0].r.name+' is waiting for you!';
   return tips[Math.floor(Math.random()*tips.length)];
 }
-function say(text){
-  speak(text);
+function say(text,excited){
+  speak(text,excited);
   var pb=document.getElementById('pip');if(pb){pb.classList.remove('hop');void pb.offsetWidth;pb.classList.add('hop')}
   var el=document.getElementById('pip-say');if(!el)return;
   el.textContent=text;el.classList.remove('hide');el.style.animation='none';void el.offsetWidth;el.style.animation='';
@@ -1486,7 +1489,7 @@ function say(text){
 
 /* ---------- welcome, setup and tour ---------- */
 var welcomeShown=false,wlRaf=0,obStep='title',obTour=0,obTpl=null,obMade=0,obMoney=null,obReplay=false;
-var RESET_TOKEN='fresh-8';
+var RESET_TOKEN='fresh-9';
 function applyReset(){
   if(ALARM_ONLY||state.resetToken===RESET_TOKEN)return false;
   try{localStorage.removeItem(LS);localStorage.removeItem(SEEN);localStorage.removeItem(SNZ)}catch(e){}
@@ -1514,8 +1517,8 @@ function obGo(step,arg){
       '<div class="wl-tag">Remember the important stuff, save money, and level up.</div>'+
       '<button class="btn primary loud" id="ob-next"><span class="blink">Press start</span></button>';
   }else if(step==='name'){
-    html=stepHead(1,'Hi! I\'m Pip.')+'<div class="big-pip">'+pipEl('happy')+'</div>'+
-      '<p>I\'m your helper. I\'ll remind you about important stuff and cheer you on when you do it.</p>'+
+    html=stepHead(1,'Woof! I\'m Pip.')+'<div class="big-pip">'+pipEl('happy')+'</div>'+
+      '<p>I\'m your puppy pal. I\'ll remind you about important stuff and cheer you on when you do it.</p>'+
       '<label for="ob-name">What should I call you?<input id="ob-name" maxlength="20" autocomplete="off" placeholder="Your first name" value="'+esc(state.profile.name||'')+'"></label>'+
       navRow('Next');
   }else if(step==='pick'){
@@ -1567,15 +1570,15 @@ function obGo(step,arg){
   if(step!=='title'){c.classList.remove('sl-r');void c.offsetWidth}
   var nm2=state.profile.name?', '+state.profile.name:'';
   var lines={
-    name:'Hiya! I\'m Pip! I\'ll help you remember stuff and cheer you on. What\'s your name?',
+    name:'Woof woof! Hiya! I\'m Pip, your puppy pal! I\'ll help you remember stuff and cheer you on. What\'s your name?',
     pick:obMade?'Ooh, what else should I remind you about?':'Yay! Let\'s make your very first reminder'+nm2+'! What do you want to remember?',
     details:'Great pick! Now choose a time, and pick a fun alarm sound.',
-    made:'Woohoo! Your reminder is ready! When it\'s time, I\'ll pop up and let you know.',
+    made:'Woohoo! Your reminder is ready! When it\'s time, I\'ll bark and let you know!',
     money:'Do you get an allowance? I can help you save some of it!',
     money2:'Slide to choose how much to save. What are you saving up for?'
   };
   if(step==='tour'){var tsl=tourSlides()[arg||0];speak(tsl.h+'. '+tsl.p)}
-  else if(lines[step])speak(lines[step]);
+  else if(lines[step])speak(lines[step],step==='made');
   wireStep(step,arg);
   var f=c.querySelector('input:not([type=range]),#ob-next,.tbtn');if(f)f.focus();
 }
@@ -1689,7 +1692,7 @@ function finishWelcome(){
   if(!obReplay){lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};confetti(140);sfx('level');pipSpinUntil=Date.now()+1500}
   if(wl)wl.classList.add('wl-out');
   setTimeout(function(){cancelAnimationFrame(wlRaf);document.getElementById('welcome-host').innerHTML=''},reducedMotion()?0:340);
-  if(!state.onboarded){state.onboarded=true;commit();setTimeout(function(){say('Yay, you\'re all set'+(state.profile.name?', '+state.profile.name:'')+'! Let\'s have an awesome day! Click me any time.')},600)}
+  if(!state.onboarded){state.onboarded=true;commit();setTimeout(function(){say('Yay yay! You\'re all set'+(state.profile.name?', '+state.profile.name:'')+'! Let\'s have a pawsome day!',true)},600)}
 }
 
 function startParticles(){
