@@ -38,8 +38,8 @@ var embeddedPage []byte
 
 // Bump these when publishing an update to the repo's app/version.json.
 const (
-	embeddedPageVersion = 3
-	exeVersion          = 3
+	embeddedPageVersion = 4
+	exeVersion          = 4
 	updateBase          = "https://raw.githubusercontent.com/TTHenryy/Pixel-Life/main/app/"
 )
 

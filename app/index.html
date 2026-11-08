@@ -150,7 +150,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .al-pip{width:100px;height:108px;flex:none}
 .alrow{position:relative;overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .3s,transform .38s cubic-bezier(.4,0,.2,1),padding .38s,margin .38s,border-width .38s,border-color .15s,background-color .15s}
 .alrow.got{border-color:var(--xp);background:#203a1a}
-.alrow.got::after{content:"TAKEN!";position:absolute;right:14px;top:50%;font-family:var(--display);font-size:16px;color:var(--xp);text-shadow:3px 3px 0 #000;animation:stamp .25s cubic-bezier(.2,.9,.3,1.5) forwards;transform:translateY(-50%) rotate(-8deg)}
+.alrow.got::after{content:"DONE!";position:absolute;right:14px;top:50%;font-family:var(--display);font-size:16px;color:var(--xp);text-shadow:3px 3px 0 #000;animation:stamp .25s cubic-bezier(.2,.9,.3,1.5) forwards;transform:translateY(-50%) rotate(-8deg)}
 .alrow.got.skip{border-color:var(--muted);background:#2a2a30}.alrow.got.skip::after{content:"SKIPPED";color:var(--muted)}
 .alrow.got.snz{border-color:var(--gold);background:#3a3212}.alrow.got.snz::after{content:"SNOOZED";color:var(--gold)}
 @keyframes stamp{from{opacity:0;transform:translateY(-50%) rotate(-8deg) scale(2.2)}to{opacity:1;transform:translateY(-50%) rotate(-8deg) scale(1)}}
@@ -267,6 +267,57 @@ canvas.pip3d{display:block;width:100%;height:100%}
 .pform{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
 @media (max-width:760px){.pform{grid-template-columns:1fr}}
 @media (max-width:420px){.buddy-btn,.buddy-btn canvas.pip3d{width:76px;height:84px}}
+/* kid-friendly layer */
+.ico.big{width:56px;height:56px}
+.ico{width:34px;height:34px;flex:none;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.5))}
+.rem{grid-template-columns:44px 100px 1fr auto auto;grid-template-areas:"i t n c a"}
+.rem .ico{grid-area:i}
+.alrow .ico{width:40px;height:40px}
+.alrow>div:first-child{display:flex;gap:12px;align-items:center}
+.btn:hover:not(:disabled){transform:translateY(-2px)}
+.btn:active:not(:disabled){transform:translateY(2px)}
+.tile{transition:transform .2s cubic-bezier(.2,.9,.3,1.3)}
+.tile:hover{transform:translateY(-4px) rotate(-.4deg)}
+.rem{transition:transform .2s,border-color .2s,background-color .2s}
+.rem:hover{transform:translateX(4px)}
+.a.fresh{animation:flip .8s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes flip{0%{transform:rotateY(90deg) scale(.8)}60%{transform:rotateY(-12deg) scale(1.08)}100%{transform:none}}
+.hello{font-family:var(--display);font-size:12px;color:var(--gold);margin-top:8px;text-shadow:2px 2px 0 #000}
+.dayprog{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.stars{display:flex;gap:4px;flex-wrap:wrap}
+.stars svg{width:22px;height:22px;transition:transform .3s cubic-bezier(.2,.9,.3,1.6),filter .3s}
+.stars svg.off{filter:grayscale(1) brightness(.45)}
+.stars svg.on{animation:starpop .5s cubic-bezier(.2,.9,.3,1.6) both}
+@keyframes starpop{0%{transform:scale(.3) rotate(-30deg)}100%{transform:none}}
+.daytext{font-family:var(--display);font-size:10px;color:var(--muted)}
+.daytext b{color:var(--gold);font-weight:400}
+.empty-rem{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:var(--slot);border:3px dashed #555;padding:16px}
+.empty-rem .pipbox{width:90px;height:98px}
+#amb-cv{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1}
+/* setup wizard */
+.ob h2{font-size:15px;color:var(--gold);margin:0;line-height:1.5}
+.ob .step{font-family:var(--display);font-size:9px;color:var(--muted)}
+.ob{gap:16px}
+.ob p{margin:0}
+.ob .big-pip{width:160px;height:172px;margin:0 auto}
+.tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tbtn{background:var(--slot);border:3px solid #000;box-shadow:inset 3px 3px 0 #4a4a55,inset -3px -3px 0 #1a1a20;padding:12px 6px;cursor:pointer;display:grid;justify-items:center;gap:8px;color:var(--text);font-family:var(--body);font-size:19px;transition:transform .15s cubic-bezier(.2,.9,.3,1.5),border-color .15s}
+.tbtn:hover{transform:translateY(-4px) scale(1.04);border-color:var(--diamond)}
+.tbtn:focus-visible{outline:3px solid var(--diamond);outline-offset:2px}
+.tbtn svg{width:44px;height:44px}
+.choice{display:flex;gap:8px;flex-wrap:wrap}
+.choice button{font-family:var(--body);font-size:20px;color:var(--text);background:var(--slot);border:3px solid #000;padding:6px 12px;cursor:pointer;transition:transform .12s,background-color .15s}
+.choice button:hover{transform:translateY(-2px)}
+.choice button[aria-pressed="true"]{background:#2a9d8f;color:#fff;box-shadow:inset 0 3px 0 rgba(255,255,255,.3)}
+.choice button:focus-visible{outline:3px solid var(--diamond);outline-offset:2px}
+.bigtime{font-size:34px!important;max-width:220px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.split .tile .big{font-size:20px;margin:6px 0 0}
+input[type=range].big{height:28px}
+.made{display:grid;justify-items:center;gap:12px;text-align:center}
+.made .rem{width:100%;text-align:left;animation:pop .45s cubic-bezier(.2,.9,.3,1.4)}
+@media (max-width:560px){.tgrid{grid-template-columns:repeat(2,1fr)}.rem{grid-template-columns:40px 1fr auto;grid-template-areas:"i t c" "i n n" "a a a"}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:760px){
   .tiles{grid-template-columns:1fr}
@@ -301,12 +352,7 @@ function insulinReminders(since){
     {id:'r-glargine',name:'Glargine (long-acting)',time:'22:00',days:ALL.slice(),sound:'alarm',snooze:5,note:'Long-acting insulin',on:true,since:since}
   ];
 }
-function defaultReminders(){
-  return insulinReminders(Date.now()).concat([
-    {id:'r-strattera',name:'Strattera',time:'22:00',days:ALL.slice(),sound:'chime',snooze:10,note:'',on:true,since:0},
-    {id:'r-lexapro',name:'Lexapro',time:'22:00',days:ALL.slice(),sound:'chime',snooze:10,note:'',on:true,since:0}
-  ]);
-}
+function defaultReminders(){return []}
 function migrate(d){
   // v3: replace the single placeholder insulin reminder with fast-acting + long-acting
   if(!d.mig3){
@@ -325,7 +371,7 @@ function migrate(d){
   }
 }
 function normalize(s){
-  var d={v:2,settings:{allowance:50,save:40,goalName:'First $1,000',goalAmount:1000},vault:0,wallet:0,log:[],ach:{},updated:0,
+  var d={v:2,profile:{name:''},settings:{allowance:10,save:5,goalName:'My first goal',goalAmount:100},vault:0,wallet:0,log:[],ach:{},updated:0,
     reminders:null,doses:{},alarm:{volume:80,repeat:15},created:Date.now(),fx:{sound:true,buddy:true,burst:true},
     parent:{on:false,kid:'',topic:'',hide:false,ev:{taken:true,skipped:true,missed:true,money:true,level:true},day:0,time:'18:00',since:0}};
   if(s&&typeof s==='object'){
@@ -339,6 +385,8 @@ function normalize(s){
     if(s.mig3)d.mig3=true;
     if(s.mig4)d.mig4=true;
     if(s.onboarded)d.onboarded=true;
+    if(s.profile&&typeof s.profile==='object')d.profile=Object.assign(d.profile,s.profile);
+    if(s.lastAllDone)d.lastAllDone=s.lastAllDone;
     if(s.fx&&typeof s.fx==='object')d.fx=Object.assign(d.fx,s.fx);
     if(s.parent&&typeof s.parent==='object'){var ev=Object.assign(d.parent.ev,s.parent.ev||{});d.parent=Object.assign(d.parent,s.parent);d.parent.ev=ev}
     if(s.snz&&typeof s.snz==='object')d.snz=s.snz;
@@ -378,6 +426,31 @@ function streak(s){
   var n=0;while(paid[w]&&!broke[w]){n++;w=prevWeek(w)}
   return n;
 }
+var ICONS={
+  pill:{p:{X:'#111',R:'#ff5c5c',W:'#f2f2f6'},m:['........','........','.XXXXXX.','XRRRWWWX','XRRRWWWX','.XXXXXX.','........','........']},
+  pen:{p:{X:'#111',G:'#9aa3ad',B:'#4aedd9'},m:['........','........','XXXXXX..','XGGBBBXX','XGGBBBXX','XXXXXX..','........','........']},
+  tooth:{p:{X:'#111',W:'#f2f2f6'},m:['........','.XX..XX.','XWWXXWWX','XWWWWWWX','XWWWWWWX','.XWWWWX.','.XWXXWX.','..X..X..']},
+  book:{p:{X:'#111',B:'#4a7dff',L:'#a9c1ff',P:'#f2f2f6'},m:['XXXXXXX.','XBBBBBBX','XBLLLLBX','XBBBBBBX','XBLLLBBX','XBBBBBBX','XPPPPPPX','XXXXXXXX']},
+  drop:{p:{X:'#111',C:'#4ab3ff',W:'#d6f0ff'},m:['...XX...','...XX...','..XCCX..','.XCWCCX.','.XCWCCX.','XCCCCCCX','.XCCCCX.','..XXXX..']},
+  paw:{p:{N:'#d79a5a'},m:['NN....NN','NN.NN.NN','...NN...','........','..NNNN..','.NNNNNN.','.NNNNNN.','..NNNN..']},
+  moon:{p:{X:'#111',Y:'#f5c542'},m:['..XXXX..','.XYYX...','XYYX....','XYYX....','XYYX....','XYYYX..X','.XYYYYX.','..XXXX..']},
+  star:{p:{Y:'#f5c542'},m:['...YY...','...YY...','YYYYYYYY','.YYYYYY.','..YYYY..','.YYYYYY.','.YY..YY.','YY....YY']}
+};
+function icon(name,cls){
+  var ic=ICONS[name]||ICONS.star,r='';
+  ic.m.forEach(function(row,y){for(var x=0;x<row.length;x++){var ch=row[x];if(ch!=='.')r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+ic.p[ch]+'"/>'}});
+  return '<svg class="'+(cls||'ico')+'" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">'+r+'</svg>';
+}
+var TEMPLATES=[
+  {k:'pill',name:'Medicine',time:'08:00',sound:'alarm',med:true},
+  {k:'pen',name:'Insulin',time:'08:00',sound:'alarm',med:true},
+  {k:'tooth',name:'Brush teeth',time:'07:30',sound:'chime'},
+  {k:'book',name:'Homework',time:'16:00',sound:'chime',days:[1,2,3,4,5]},
+  {k:'drop',name:'Drink water',time:'09:00',sound:'beep',every:2,until:'21:00'},
+  {k:'paw',name:'Feed my pet',time:'18:00',sound:'beep'},
+  {k:'moon',name:'Bedtime',time:'21:00',sound:'chime'},
+  {k:'star',name:'',time:'12:00',sound:'chime'}
+];
 var GEM=['..XXXXX..','.XLWLLMX.','XLWLLMMDX','XMMMMMMDX','.XMMMMDX.','..XMMDX..','...XDX...','....X....'];
 function gem(gray){
   var c=gray?{X:'#111',L:'#8a8a8a',W:'#bdbdbd',M:'#666',D:'#444'}:{X:'#0b3532',L:'#a8fdf0',W:'#ffffff',M:'#4aedd9',D:'#259a8c'};
@@ -413,20 +486,20 @@ function occs(r,d){
 function idOfKey(k){return k.split('|')[1].split(/[@#]/)[0]}
 function occStatus(o,now,doses){
   var rec=(doses||state.doses)[o.key];
-  if(rec)return rec.s==='taken'?{k:'done',label:'Taken '+clock(rec.t),rec:rec}:{k:'done',label:'Skipped',rec:rec};
+  if(rec)return rec.s==='taken'?{k:'done',label:'Done '+clock(rec.t),rec:rec}:{k:'done',label:'Skipped',rec:rec};
   if(o.ts){
     var n=now.getTime();
     if(n<o.ts){var lm=Math.ceil((o.ts-n)/60000),lh=Math.floor(lm/60);return {k:'up',label:'in '+(lh?lh+'h ':'')+(lm%60)+'m'}}
     if(n>=o.ts+per(o.r))return {k:'late',label:'Missed'};
     if(SZ()[o.key]&&SZ()[o.key]>n)return {k:'snz',label:'Snoozed to '+clock(SZ()[o.key])};
-    return {k:'due',label:'TAKE NOW'};
+    return {k:'due',label:'TIME!'};
   }
   var mins=now.getHours()*60+now.getMinutes(),at=toMin(o.t);
   if(mins<at){var left=at-mins,h=Math.floor(left/60),m=left%60;return {k:'up',label:'in '+(h?h+'h ':'')+m+'m'}}
   var sched=new Date(now);sched.setHours(Math.floor(at/60),at%60,0,0);
-  if((o.r.since||0)>sched.getTime())return {k:'late',label:'Not taken yet'};
+  if((o.r.since||0)>sched.getTime())return {k:'late',label:'Not done yet'};
   if(SZ()[o.key]&&SZ()[o.key]>now.getTime())return {k:'snz',label:'Snoozed to '+clock(SZ()[o.key])};
-  return {k:'due',label:'TAKE NOW'};
+  return {k:'due',label:'TIME!'};
 }
 // one row per reminder: picks the occurrence that matters right now
 function remView(r,now){
@@ -513,7 +586,7 @@ var ADV=[
   {id:'s4',n:'Iron Will',d:'4 paydays in a row, no vault breaks',t:function(s){return streak(s)>=4}},
   {id:'s12',n:'Beacon Lit',d:'12 paydays in a row, no vault breaks',t:function(s){return streak(s)>=12}},
   {id:'sweep',n:'Nothing Wasted',d:'Move leftover wallet money into the vault',t:function(s){return s.log.some(function(e){return e.k==='sweep'})}},
-  {id:'meds7',n:'Potion Master',d:'Every reminder taken 7 days in a row',t:function(s){return medStreak(s)>=7}}
+  {id:'meds7',n:'Potion Master',d:'Every reminder done 7 days in a row',t:function(s){return medStreak(s)>=7}}
 ];
 function checkAdv(){ADV.forEach(function(a){if(!state.ach[a.id]&&a.t(state))state.ach[a.id]=Date.now()})}
 function showToasts(){
@@ -526,7 +599,7 @@ function showToasts(){
       if(Date.now()-ts<10*60*1000){
         var el=document.createElement('div');el.className='toast';el.setAttribute('role','status');
         el.innerHTML=gem()+'<div><div class="t1">Advancement made!</div><div class="t2">'+esc(a.n)+'</div></div>';
-        host.appendChild(el);setTimeout(function(){el.remove()},5000);sfx('level');burst('gem',22);
+        host.appendChild(el);setTimeout(function(){el.remove()},5000);sfx('level');burst('gem',22);confetti(60);
       }
     }
   });
@@ -588,6 +661,7 @@ function commit(){
   var lvlNow=Math.floor(state.vault/100);
   if(lastLevel!==null&&lvlNow>lastLevel)setTimeout(function(){levelUp(lvlNow)},350);
   lastLevel=lvlNow;
+  checkAllDone();
   render();scheduleFlush();showToasts();tick();updateBuddy();
 }
 function adoptLocal(){
@@ -729,7 +803,8 @@ function saveSettings(f){
 function setDose(key,s){
   state.doses[key]={s:s,t:Date.now()};delete SZ()[key];
   var r=findRem(idOfKey(key)),nm=r?r.name:'a reminder';
-  if(s==='taken'){celebrate('taken',r?r.name:'');notifyParent('taken','Pixel Life',kidName()+' took '+medName(nm)+' at '+clock(Date.now())+'.')}
+  var isMed=r&&(r.med||r.icon==='pill'||r.icon==='pen');
+  if(s==='taken'){celebrate('taken',r?r.name:'');notifyParent('taken','Pixel Life',kidName()+(isMed?' took ':' finished ')+(isMed?medName(nm):nm)+' at '+clock(Date.now())+'.')}
   else{sfx('click');notifyParent('skipped','Pixel Life',kidName()+' skipped '+medName(nm)+' at '+clock(Date.now())+'.')}
   commit();
 }
@@ -782,7 +857,8 @@ function editReminder(id){
       modal({title:'Delete '+esc(r.name)+'?',body:'<p>This reminder will stop going off.</p>',ok:'Delete it',danger:true,
         submit:function(){state.reminders=state.reminders.filter(function(x){return x.id!==r.id});commit()}});
     }},
-    body:'<label for="rm-n">What is it?<input id="rm-n" maxlength="40" autocomplete="off" value="'+esc(r.name)+'" placeholder="Insulin, check blood sugar, chores..."></label>'+
+    body:'<div><div class="muted" style="font-size:19px;margin-bottom:4px">Icon</div><div class="choice" id="rm-icons">'+Object.keys(ICONS).map(function(k){return '<button type="button" data-icon="'+k+'" aria-label="'+k+'" aria-pressed="'+((r.icon||'star')===k)+'">'+icon(k)+'</button>'}).join('')+'</div></div>'+
+      '<label for="rm-n">What is it?<input id="rm-n" maxlength="40" autocomplete="off" value="'+esc(r.name)+'" placeholder="Insulin, check blood sugar, chores..."></label>'+
       '<label for="rm-r">Repeat<select id="rm-r">'+repSel+'</select></label>'+
       '<label for="rm-t" id="rm-tw"'+(isTimer(r)?' hidden':'')+'><span id="rm-tl">'+(r.every?'Start time':'Time')+'</span><input type="time" id="rm-t" value="'+esc(r.time)+'"></label>'+
       '<label for="rm-u" id="rm-ul"'+(r.every&&!isTimer(r)?'':' hidden')+'>Last one no later than<input type="time" id="rm-u" value="'+esc(r.until||'22:00')+'"></label>'+
@@ -814,12 +890,14 @@ function editReminder(id){
         if(toMin(until)<toMin(time))return 'The last time has to be after the start time.';
         r.every=every;r.until=until;
       }else{delete r.every;delete r.until;delete r.mode;delete r.anchor}
+      var pi=f.querySelector('#rm-icons [aria-pressed="true"]');r.icon=pi?pi.getAttribute('data-icon'):'star';
       r.name=name;r.time=time;r.days=d;r.sound=val(f,'rm-s');r.snooze=z;r.note=val(f,'rm-o').trim();r.on=f.querySelector('#rm-on').checked;
       r.since=timer?0:Date.now();delete r.setup;
       if(isNew)state.reminders.push(r);
       state.reminders.sort(function(a,b){return toMin(a.time)-toMin(b.time)});
       commit();
     }});
+  f.querySelectorAll('#rm-icons button').forEach(function(b){b.onclick=function(){f.querySelectorAll('#rm-icons button').forEach(function(x){x.setAttribute('aria-pressed','false')});b.setAttribute('aria-pressed','true');sfx('click')}});
   f.querySelector('#rm-r').onchange=function(){
     var v=this.value,t=v[0]==='t',on=v!=='0'&&!t;
     f.querySelector('#rm-ul').hidden=!on;f.querySelector('#rm-tw').hidden=t;f.querySelector('#rm-xw').hidden=!t;
@@ -862,14 +940,14 @@ function tick(){
 function renderAlarm(due){
   var rows=due.map(function(o){
     var r=o.r,k=esc(o.key);
-    return '<div class="alrow"><div><div class="al-time">'+fmtTime(o.t)+'</div><b>'+esc(r.name)+'</b>'+(r.note?'<div class="muted">'+esc(r.note)+'</div>':'')+'</div>'+
-      '<div class="actions"><button class="btn primary" data-dose="taken" data-key="'+k+'">Taken</button>'+
+    return '<div class="alrow"><div>'+icon(r.icon||'star')+'<div><div class="al-time">'+fmtTime(o.t)+'</div><b>'+esc(r.name)+'</b>'+(r.note?'<div class="muted">'+esc(r.note)+'</div>':'')+'</div></div>'+
+      '<div class="actions"><button class="btn primary" data-dose="taken" data-key="'+k+'">Done</button>'+
       '<button class="btn" data-snooze="'+k+'">Snooze '+(r.snooze||10)+' min</button>'+
       '<button class="btn sm" data-dose="skipped" data-key="'+k+'">Skip</button></div></div>';
   }).join('');
   var inner=
-    '<div class="al-top"><div class="al-pip">'+pipEl('alert')+'</div><div><h2 id="al-h">'+(due.length>1?'Time to take these!':'Time to take it!')+'</h2><div class="al-sub">'+clock(Date.now())+(due.length>1?' · '+due.length+' reminders at once':'')+'</div></div></div>'+rows+
-    (due.length>1?'<div class="al-all"><button class="btn primary loud" data-takeall="1">Taken all '+due.length+'</button></div>':'')+
+    '<div class="al-top"><div class="al-pip">'+pipEl('alert')+'</div><div><h2 id="al-h">'+(due.length>1?'It\'s time for these!':'It\'s time!')+'</h2><div class="al-sub">'+clock(Date.now())+(due.length>1?' · '+due.length+' reminders at once':'')+'</div></div></div>'+rows+
+    (due.length>1?'<div class="al-all"><button class="btn primary loud" data-takeall="1">All '+due.length+' done</button></div>':'')+
     (soundOn()?'':'<button class="btn danger loud" data-act="sound">Sound is off: tap to turn it on</button>');
   var box=document.querySelector('#alarm-host .overlay.alarm:not(.closing) .alarmbox');
   if(box){box.innerHTML=inner;box.classList.add('settled')}
@@ -908,19 +986,20 @@ function renderToday(){
     if(!isTimer(r)&&r.days.length!==7)sub.push(r.days.map(function(i){return DAYN[i]}).join(', '));
     if(r.every&&v.total)sub.push(v.taken+' of '+v.total+' taken today');
     var btns='';
-    if(v.k!=='off'&&v.k!=='done'&&v.occ)btns='<button class="btn sm primary" data-dose="taken" data-key="'+esc(v.occ.key)+'">Taken</button><button class="btn sm" data-dose="skipped" data-key="'+esc(v.occ.key)+'">Skip</button>';
+    if(v.k!=='off'&&v.k!=='done'&&v.occ)btns='<button class="btn sm primary" data-dose="taken" data-key="'+esc(v.occ.key)+'">Done</button><button class="btn sm" data-dose="skipped" data-key="'+esc(v.occ.key)+'">Skip</button>';
     if(v.undoKey&&v.k!=='off')btns+='<button class="btn sm" data-undo="'+esc(v.undoKey)+'">Undo</button>';
     btns+='<button class="btn sm" data-edit="'+esc(r.id)+'"'+(readOnly?' disabled':'')+'>Edit</button>';
-    return '<div class="rem s-'+v.k+'"><div class="rt">'+fmtTime(showT)+'</div><div class="rn"><b>'+esc(r.name)+'</b>'+
+    return '<div class="rem s-'+v.k+'">'+icon(r.icon||'star')+'<div class="rt">'+fmtTime(showT)+'</div><div class="rn"><b>'+esc(r.name)+'</b>'+
       (sub.length?'<span class="muted">'+esc(sub.join(' · '))+'</span>':'')+'</div>'+
       '<span class="chip '+chip+'">'+esc(v.label)+'</span><div class="ra">'+btns+'</div></div>';
   }).join('');
-  el.innerHTML=rows||'<p class="empty">No reminders yet. Press Add reminder.</p>';
+  el.innerHTML=rows||'<div class="empty-rem"><div class="pipbox">'+pipEl('happy')+'</div><div><b style="font-size:26px;font-weight:400">No reminders yet!</b><p style="margin:4px 0 10px">Make one for anything you want to remember: medicine, homework, brushing teeth, feeding your pet...</p><button class="btn primary" data-act="addrem">Make a reminder</button></div></div>';
+  renderDayProg();
   var ms=document.getElementById('medstreak');if(ms)ms.textContent=medStreak(state);
 }
 function parentPanel(){
   var P=state.parent,days=DAYN.map(function(n,i){return '<option value="'+i+'"'+(P.day===i?' selected':'')+'>'+['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][i]+'</option>'}).join('');
-  var ev=[['taken','Took a medicine'],['skipped','Skipped a medicine'],['missed','Missed a medicine'],['money','Saved or spent savings'],['level','Leveled up']];
+  var ev=[['taken','Finish a reminder'],['skipped','Skip a reminder'],['missed','Miss a reminder'],['money','Saved or spent savings'],['level','Leveled up']];
   var evh=ev.map(function(e){return '<label class="check" for="pa-ev-'+e[0]+'"><input type="checkbox" id="pa-ev-'+e[0]+'"'+(P.ev[e[0]]?' checked':'')+'> '+e[1]+'</label>'}).join('');
   if(!DESKTOP)return '<section class="panel"><h2>Parent updates</h2><p class="note" style="margin:0">Phone updates for a parent or guardian work in the Pixel Life desktop app for Windows. Set them up there.</p></section>';
   return '<section class="panel"><details class="settings" id="pa-details"'+(parentOpen?' open':'')+'><summary>Parent updates '+(P.on?'<span class="chip good">On</span>':'<span class="chip">Off</span>')+'</summary>'+
@@ -967,7 +1046,7 @@ function animateTo(xp,wallet,vault){
 }
 function render(){
   if(ALARM_ONLY){document.body.classList.add('alarm-only');document.getElementById('root').innerHTML='<div class="toasts" id="toasts"></div>';return}
-  var s=state.settings,sp=spendAmt(),st=streak(state);
+  var s=state.settings,sp=spendAmt(),st=streak(state),ms=medStreak(state);
   var pct=Math.max(0,Math.min(100,state.vault/s.goalAmount*100));
   var remaining=Math.max(0,round(s.goalAmount-state.vault));
   var weeks=s.save>0?Math.ceil(remaining/s.save):null;
@@ -981,8 +1060,8 @@ function render(){
   var dia=Math.floor(state.vault/10),slots='',left=dia;
   for(var i=0;i<27;i++){var c=Math.min(64,left);left-=c;slots+='<div class="slot">'+(c>0?gem()+(c>1?'<span>'+c+'</span>':''):'')+'</div>'}
 
-  var adv=ADV.map(function(a){var on=!!state.ach[a.id];
-    return '<div class="a '+(on?'on':'off')+'"><div class="n">'+esc(a.n)+'</div><div class="d">'+esc(a.d)+'</div>'+(on?'<div class="d">Unlocked '+shortDate(state.ach[a.id])+'</div>':'')+'</div>'}).join('');
+  var adv=ADV.map(function(a){var on=!!state.ach[a.id],fresh=on&&Date.now()-state.ach[a.id]<6000;
+    return '<div class="a '+(on?'on':'off')+(fresh?' fresh':'')+'"><div class="n">'+esc(a.n)+'</div><div class="d">'+esc(a.d)+'</div>'+(on?'<div class="d">Unlocked '+shortDate(state.ach[a.id])+'</div>':'')+'</div>'}).join('');
   var got=ADV.filter(function(a){return state.ach[a.id]}).length;
 
   var items=state.log.slice(-14).reverse().map(function(e){
@@ -993,18 +1072,18 @@ function render(){
 
   document.getElementById('root').innerHTML=
   '<div class="wrap'+(firstRender?' intro':'')+'">'+
-   '<header class="top"><div class="brand">'+gem()+'<div><h1>Pixel Life</h1><div class="sub">Reminders and savings in one place.</div></div></div><div class="row" style="margin:0;align-items:center"><button class="btn sm" data-act="tour">Tutorial</button><span id="status">'+statusHtml()+'</span></div></header>'+
+   '<header class="top"><div class="brand">'+gem()+'<div><h1>Pixel Life</h1><div class="hello">'+esc(greeting())+'</div></div></div><div class="row" style="margin:0;align-items:center"><button class="btn sm" data-act="tour">Tutorial</button><span id="status">'+statusHtml()+'</span></div></header>'+
 
    '<section class="panel"><div class="panelhead"><h2>Today\'s reminders</h2><div class="soundbar" id="soundbar"></div></div>'+
-    '<div class="rems" id="today"></div>'+
-    '<div class="row"><button class="btn primary" data-act="addrem"'+dis+'>Add reminder</button><span class="chip good" style="align-self:center">All taken: <span id="medstreak">0</span> days in a row</span></div>'+
-    '<p class="note">'+(DESKTOP?'The desktop app keeps your PC awake and sounds alarms even with this window closed. It can\'t help if the PC is off, so keep phone alarms as a backup.':'Alarms only sound while this page is open and your device is awake. Phones pause background tabs, so keep your phone alarms (and your pump or CGM alerts) set as your main backup.')+'</p>'+
+    '<div class="dayprog" id="dayprog"></div><div class="rems" id="today"></div>'+
+    '<div class="row"><button class="btn primary" data-act="addrem"'+dis+'>Add reminder</button></div>'+
+    '<p class="note">'+(DESKTOP?'Keep Pixel Life running so your alarms can ring.':'Keep this page open so your alarms can ring.')+(state.reminders.some(function(r){return r.med||r.icon==='pill'||r.icon==='pen'})?' For medicine, keep phone alarms on too.':'')+'</p>'+
    '</section>'+
 
    '<section class="tiles">'+
     '<div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big" id="vault-num">'+fmt(anim.vault)+'</div><div class="muted">Money you\'ve saved. Hands off.</div></div>'+
-    '<div class="panel tile wallet"><div class="label"><span>Wallet</span><span>'+fmt(sp)+'/wk</span></div><div class="big">'+fmt(state.wallet)+'</div><div class="meter" aria-hidden="true"><i id="wallet-fill" style="width:'+anim.wallet+'%"></i></div><div class="muted" style="margin-top:6px">'+(state.wallet>sp?'Leftovers! Move them to the vault.':state.wallet<=0?'Empty until next payday.':'This is all you can spend.')+'</div></div>'+
-    '<div class="panel tile streak"><div class="label"><span>Streak</span><span>'+(st>=4?'On fire':'Keep going')+'</span></div><div class="big">'+st+' wk'+(st===1?'':'s')+'</div><div class="muted">Paydays in a row without breaking the vault.</div></div>'+
+    '<div class="panel tile wallet"><div class="label"><span>Wallet</span><span>'+(s.allowance>0?fmt(sp)+'/wk':'')+'</span></div><div class="big">'+fmt(state.wallet)+'</div><div class="meter" aria-hidden="true"><i id="wallet-fill" style="width:'+anim.wallet+'%"></i></div><div class="muted" style="margin-top:6px">'+(s.allowance<=0?'Money you can spend.':state.wallet>sp?'Leftovers! Move them to the vault.':state.wallet<=0?'Empty until next payday.':'This is all you can spend.')+'</div></div>'+
+    '<div class="panel tile streak"><div class="label"><span>Streak</span><span>'+(ms>=3?'On fire!':'Keep going')+'</span></div><div class="big">'+ms+' day'+(ms===1?'':'s')+'</div><div class="muted">Days in a row with every reminder done.</div></div>'+
    '</section>'+
 
    '<section class="panel"><div class="goalhead"><h2 style="margin:0">Goal</h2><span class="goalname">'+esc(s.goalName)+': '+fmt(s.goalAmount)+'</span></div>'+
@@ -1012,9 +1091,9 @@ function render(){
     '<div class="facts"><span><b>'+Math.floor(pct)+'%</b> there</span>'+goalLine+'<span>Level = every $100 saved</span></div></section>'+
 
    '<section class="panel"><h2>Money</h2><div class="actions">'+
-    '<button class="btn primary" data-act="pay"'+dis+'>Log payday +'+fmt(s.allowance)+'</button>'+
+    (s.allowance>0?'<button class="btn primary" data-act="pay"'+dis+'>Log payday +'+fmt(s.allowance)+'</button>':'')+
     '<button class="btn" data-act="spend"'+(readOnly||state.wallet<=0?' disabled':'')+'>Spend from wallet</button>'+
-    '<button class="btn" data-act="bonus"'+dis+'>Add bonus money</button>'+
+    '<button class="btn'+(s.allowance>0?'':' primary')+'" data-act="bonus"'+dis+'>'+(s.allowance>0?'Add bonus money':'Add money')+'</button>'+
     '<button class="btn" data-act="sweep"'+(readOnly||state.wallet<=0?' disabled':'')+'>Move leftovers to vault</button>'+
     '<button class="btn danger" data-act="brk"'+(readOnly||state.vault<=0?' disabled':'')+'>Break the vault</button>'+
    '</div></section>'+
@@ -1063,6 +1142,63 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('submit',function(e){if(e.target.id==='st-form'){e.preventDefault();saveSettings(e.target)}});
 
+/* ---------- kid helpers ---------- */
+function greeting(){
+  var h=new Date().getHours(),n=state.profile&&state.profile.name;
+  var g=h<5?'Up late':h<12?'Good morning':h<17?'Good afternoon':h<21?'Good evening':'Good night';
+  return g+(n?', '+n:'')+'!';
+}
+function todayOccs(){
+  var now=new Date(),list=[];
+  state.reminders.forEach(function(r){if(scheduledOn(r,now))occs(r,now).forEach(function(o){
+    var at=o.ts?o.ts:new Date(now.getFullYear(),now.getMonth(),now.getDate(),Math.floor(toMin(o.t)/60),toMin(o.t)%60).getTime();
+    if(at<=now.getTime()&&(o.r.since||0)<=at)list.push(o);
+  })});
+  return list;
+}
+var shownStars=-1;
+function renderDayProg(){
+  var el=document.getElementById('dayprog');if(!el)return;
+  var list=todayOccs(),done=list.filter(function(o){return state.doses[o.key]}).length,n=list.length;
+  if(!n){el.innerHTML='<span class="daytext">'+(state.reminders.length?'Nothing due yet today. Nice and easy!':'')+'</span>';return}
+  var cap=Math.min(n,12),filled=Math.round(done/n*cap),stars='';
+  for(var i=0;i<cap;i++)stars+=icon('star',i<filled?(i>=shownStars&&shownStars>=0?'on':''):'off');
+  shownStars=filled;
+  el.innerHTML='<div class="stars">'+stars+'</div><span class="daytext">Today: <b>'+done+' of '+n+'</b> done'+(done===n?' · All done!':'')+'</span>';
+}
+function checkAllDone(){
+  var list=todayOccs();if(!list.length)return;
+  var all=list.every(function(o){return state.doses[o.key]});
+  var today=keyOf(new Date());
+  if(all&&state.lastAllDone!==today){
+    state.lastAllDone=today;
+    setTimeout(function(){confetti(120);sfx('level');say('Everything is done for now! You rock'+(state.profile.name?', '+state.profile.name:'')+'!')},700);
+  }
+}
+function confetti(n){
+  if(!state.fx||!state.fx.burst||reducedMotion())return;
+  var cv=document.getElementById('fx-cv');
+  if(!cv){cv=document.createElement('canvas');cv.id='fx-cv';cv.setAttribute('aria-hidden','true');document.body.appendChild(cv)}
+  cv.width=innerWidth;cv.height=innerHeight;
+  var cols=['#4aedd9','#80d42a','#f5c542','#ff5c5c','#a9c1ff','#ff8fb1'];
+  for(var i=0;i<n;i++)fxParts.push({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*0.5,vx:(Math.random()-.5)*2,vy:1+Math.random()*2.5,life:220,conf:true,w:Math.random()*6.28,c:cols[i%cols.length],s:6+Math.floor(Math.random()*2)*2});
+  if(!fxRaf)fxRaf=requestAnimationFrame(fxFrame);
+}
+function startAmbient(){
+  if(reducedMotion()||document.getElementById('amb-cv'))return;
+  var cv=document.createElement('canvas');cv.id='amb-cv';cv.setAttribute('aria-hidden','true');document.body.insertBefore(cv,document.body.firstChild);
+  var ctx=cv.getContext('2d'),ps=[];
+  function size(){cv.width=innerWidth;cv.height=innerHeight}
+  size();addEventListener('resize',size);
+  for(var i=0;i<26;i++)ps.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,v:.15+Math.random()*.35,w:Math.random()*6.28,s:2+Math.floor(Math.random()*2)*2,c:['#4aedd9','#80d42a','#f5c542'][i%3]});
+  (function f(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(function(p){p.y-=p.v;p.w+=.015;if(p.y<-8){p.y=cv.height+8;p.x=Math.random()*cv.width}
+      ctx.globalAlpha=.12+.12*Math.sin(p.w);ctx.fillStyle=p.c;ctx.fillRect(Math.round(p.x+Math.sin(p.w)*10),Math.round(p.y),p.s,p.s)});
+    ctx.globalAlpha=1;requestAnimationFrame(f);
+  })();
+}
+
 /* ---------- fun: sounds, bursts, floaters, level-ups, Pip ---------- */
 var lastPt={x:0,y:0,t:0},lastLevel=null,fxParts=[],fxRaf=0,recentWin=0;
 function pt(){
@@ -1102,6 +1238,7 @@ function fxFrame(){
   var ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);
   fxParts=fxParts.filter(function(q){return q.life>0});
   fxParts.forEach(function(q){
+    if(q.conf){q.w+=.12;q.x+=q.vx+Math.sin(q.w)*1.2;q.y+=q.vy;q.life--;ctx.globalAlpha=Math.min(1,q.life/30);ctx.fillStyle=q.c;var sw=Math.abs(Math.cos(q.w))*q.s+1;ctx.fillRect(Math.round(q.x),Math.round(q.y),Math.round(sw),q.s);return}
     q.x+=q.vx;q.y+=q.vy;q.vy+=0.32;q.vx*=0.99;q.life--;
     ctx.globalAlpha=Math.min(1,q.life/20);
     if(q.gem){
@@ -1116,12 +1253,12 @@ function notifyParent(type,title,msg){
   if(!DESKTOP||!P||!P.on||!P.topic||!P.ev[type])return;
   fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title,msg:msg,type:type})}).catch(function(){});
 }
-function kidName(){return (state.parent&&state.parent.kid)||'Your kid'}
+function kidName(){return (state.parent&&state.parent.kid)||(state.profile&&state.profile.name)||'Your kid'}
 function medName(n){return state.parent&&state.parent.hide?'a reminder':n}
 var CHEERS=['Nice job!','Great work!','Another one done!','You got this!','Way to go!','Keep it up!'];
 function celebrate(kind,detail){
   recentWin=Date.now();pipSpinUntil=Date.now()+900;
-  if(kind==='taken'){if(Date.now()-leaveFxAt>1500){burst('gem',20);sfx('taken')}floater('+1 done!','green');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+' is checked off.':''))}
+  if(kind==='taken'){if(Date.now()-leaveFxAt>1500){burst('gem',20);sfx('taken')}floater('Done!','green');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+' is done.':''))}
   else if(kind==='pay'){burst('gold',26);floater('+'+detail+' saved','');sfx('coin');say('Ka-ching! '+detail+' went into your vault.')}
   else if(kind==='bonus'){burst('gem',18);floater('+'+detail,'');sfx('coin');say('Bonus loot! '+detail+' is locked away.')}
 }
@@ -1130,7 +1267,7 @@ function levelUp(n){
   var el=document.createElement('div');el.className='lvlup';el.setAttribute('role','status');
   el.innerHTML='<div class="lvlup-box"><div class="t">LEVEL UP!</div><div class="n">You reached level '+n+'</div><div class="muted">That\'s '+fmt(n*100)+' saved. Click to keep going.</div></div>';
   document.body.appendChild(el);
-  lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',20);
+  lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',40);burst('gold',20);confetti(90);
   var done=function(){el.remove()};el.onclick=done;setTimeout(done,2600);
   say('Level '+n+'! You are getting good at this.');
   notifyParent('level','Pixel Life',kidName()+' reached savings level '+n+' ('+fmt(n*100)+' saved)!');
@@ -1267,7 +1404,8 @@ function updateBuddy(){
 }
 function tip(){
   var s=state.settings,pct=Math.floor(Math.max(0,Math.min(100,state.vault/s.goalAmount*100)));
-  var tips=['Press Taken when you take your meds. I\'ll cheer!','Every $10 you save is a diamond in your inventory.','Leftover wallet money? Move it to the vault for bonus loot.','You are '+pct+'% of the way to '+s.goalName+'.','Keep your phone alarms on too, especially at night.','Click a diamond in your inventory. Go on!','Each $100 saved is a new level.','Want the tour again? Press Tutorial at the top.'];
+  var nm=state.profile&&state.profile.name?state.profile.name:'friend';
+  var tips=['Hi '+nm+'! Press Done when you finish a reminder. I\'ll cheer!','Make a reminder for anything: homework, brushing teeth, feeding your pet.','Every $10 you save is a diamond in your inventory.','Leftover wallet money? Move it to the vault for bonus loot.','You are '+pct+'% of the way to '+s.goalName+'.','Keep your phone alarms on too, especially at night.','Click a diamond in your inventory. Go on!','Each $100 saved is a new level.','Want the tour again? Press Tutorial at the top.'];
   var d=dueList();if(d.length)return 'You still need to take '+d[0].r.name+'!';
   return tips[Math.floor(Math.random()*tips.length)];
 }
@@ -1277,79 +1415,194 @@ function say(text){
   clearTimeout(bubbleTimer);bubbleTimer=setTimeout(function(){el.classList.add('hide')},5000);
 }
 
-/* ---------- welcome + tutorial ---------- */
-var welcomeShown=false,tutStep=0,wlRaf=0;
+/* ---------- welcome, setup and tour ---------- */
+var welcomeShown=false,wlRaf=0,obStep='title',obTour=0,obTpl=null,obMade=0,obMoney=null,obReplay=false;
 function maybeWelcome(){if(ALARM_ONLY)return;if(!state.onboarded&&!welcomeShown)showWelcome(false)}
-function slides(){
-  var s=state.settings,sp=spendAmt();
-  return [
-    {h:'Welcome to Pixel Life',p:'Your medicine reminders and your savings, in one place. This tour takes about a minute, and you can replay it any time from the Tutorial button.',
-     d:'<div class="demo"><div class="gemrow">'+gem()+gem()+gem()+'</div><div class="chips"><span class="chip good">Reminders</span><span class="chip warn">Savings</span><span class="chip">Advancements</span></div></div>'},
-    {h:'Reminders',p:'When something is due, an alarm sounds and a red box pops up. Press <b>Taken</b> when you take it, <b>Snooze</b> for a few more minutes, or <b>Skip</b> if you are not taking that dose.',
-     d:'<div class="demo"><div class="rem s-due"><div class="rt">10:00 PM</div><div class="rn"><b>Glargine</b><span class="muted">Long-acting insulin</span></div><span class="chip bad">TAKE NOW</span><div class="ra"><span class="btn sm primary">Taken</span><span class="btn sm">Skip</span></div></div></div>'},
-    {h:'Make reminders yours',p:'Press <b>Edit</b> on any reminder to change its time, days, sound or snooze length. Timers like Kirsty repeat every few hours, day and night. Use <b>Add reminder</b> for anything else, like checking your blood sugar.',
-     d:'<div class="demo"><div class="chips"><span class="chip">Once a day</span><span class="chip">Every 3 hours</span><span class="chip good">Timer: day and night</span><span class="chip">Chime</span><span class="chip">Beep</span><span class="chip bad">Alarm</span></div></div>'},
-    {h:'Sound',p:DESKTOP?'The desktop app plays alarms for you, even with this window closed, and keeps your PC from falling asleep. If the window is closed, a pop-up appears: Yes means Taken, No means Snooze.':'Browsers block sound until you tap the page. Each time you open Pixel Life, tap the red <b>Sound is off</b> button once.',
-     d:'<div class="demo"><div class="soundbar">'+(DESKTOP?'<span class="chip good">Sound by desktop app</span>':'<span class="btn danger">Sound is off: tap to turn on</span>')+'<span class="btn sm">Test sound</span></div></div>'},
-    {h:'Payday',p:'When you get your allowance, press <b>Log payday</b>. '+fmt(s.save)+' locks into the Vault and '+fmt(sp)+' goes to your Wallet to spend.',
-     d:'<div class="demo"><div class="tiles"><div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big">+'+fmt(s.save)+'</div></div><div class="panel tile wallet"><div class="label"><span>Wallet</span></div><div class="big">+'+fmt(sp)+'</div></div></div></div>'},
-    {h:'The Vault stays locked',p:'You can only spend what is in your Wallet. Breaking the Vault means typing why, and it resets your streak. Have money left over? Move it into the Vault.',
-     d:'<div class="demo"><div class="actions"><span class="btn">Spend from wallet</span><span class="btn">Move leftovers to vault</span><span class="btn danger">Break the vault</span></div></div>'},
-    {h:'Level up',p:'Every $100 saved is a level on your goal bar. Every $10 is a diamond in your inventory. Unlock advancements for streaks, goals and taking every reminder.',
-     d:'<div class="demo"><div class="xpwrap"><span class="lvl">3</span><div class="xp"><i style="width:38%"></i></div></div><div class="gemrow">'+gem()+gem()+gem()+gem()+gem()+'</div></div>'},
-    {h:'Meet Pip',p:'Pip is your pixel helper in the corner. Pip cheers when you take your meds or save money, warns you when something is due, and gives tips when you click. You can turn Pip, sounds and gem bursts off in Settings.',
-     d:'<div class="demo" style="justify-items:center"><div style="width:120px;height:130px">'+pipEl('happy')+'</div></div>'},
-    {h:'One last thing',p:'Pixel Life can only sound alarms while '+(DESKTOP?'your PC is on and awake':'this page is open and your device is awake')+'. Keep alarms on your phone and your Dexcom alerts turned on as a backup, especially overnight.',
-     d:'<div class="demo"><div class="chips"><span class="chip good">Pixel Life</span><span class="chip good">Phone alarms</span><span class="chip good">Dexcom alerts</span></div></div>'}
-  ];
-}
 function showWelcome(replay){
-  welcomeShown=true;tutStep=0;
+  welcomeShown=true;obReplay=replay;obMade=0;obMoney=null;
   var host=document.getElementById('welcome-host');
-  host.innerHTML='<div class="wl" role="dialog" aria-modal="true" aria-label="Welcome to Pixel Life"><canvas id="wl-cv" aria-hidden="true"></canvas><div class="wl-card wl-title wl-in" id="wl-card">'+
-    '<div class="wl-gem">'+gem()+'</div><h1 class="wl-logo">PIXEL LIFE</h1>'+
-    '<div class="wl-tag">Reminders and savings, one level at a time.</div>'+
-    '<button class="btn primary loud" id="wl-start"><span class="blink">Press start</span></button>'+
-    '<button class="linkbtn" id="wl-skip">'+(replay?'Close':'Skip the tutorial')+'</button></div></div>';
+  host.innerHTML='<div class="wl" role="dialog" aria-modal="true" aria-label="Welcome to Pixel Life"><canvas id="wl-cv" aria-hidden="true"></canvas><div class="wl-card" id="wl-card"></div></div>';
   startParticles();
-  host.querySelector('#wl-start').onclick=function(){renderTut(0,1)};
-  host.querySelector('#wl-skip').onclick=finishWelcome;
-  host.querySelector('#wl-start').focus();
   document.addEventListener('keydown',wlKeys);
+  if(replay)obGo('tour',0);else obGo('title');
 }
-function renderTut(i,dir){
-  var list=slides();tutStep=Math.max(0,Math.min(list.length-1,i));
-  var sl=list[tutStep],last=tutStep===list.length-1;
-  var pips=list.map(function(_,j){return '<button class="pip'+(j<=tutStep?' on':'')+'" data-pip="'+j+'" aria-label="Step '+(j+1)+'"></button>'}).join('');
-  var card=document.getElementById('wl-card');
-  card.className='wl-card tut panel'+(dir===1&&tutStep===0?' wl-in':'');
-  card.innerHTML='<div class="slide '+(dir>0?'sl-r':'sl-l')+'"><div class="step">Step '+(tutStep+1)+' of '+list.length+'</div><h2>'+sl.h+'</h2><p>'+sl.p+'</p>'+sl.d+'</div>'+
-    '<div class="pips">'+pips+'</div>'+
-    '<div class="tutnav"><button class="linkbtn" id="tut-skip">Skip</button><div class="row">'+
-    (tutStep>0?'<button class="btn" id="tut-back">Back</button>':'')+
-    '<button class="btn primary" id="tut-next">'+(last?'Let\'s go!':'Next')+'</button></div></div>'+
-    '<div class="keys">Arrow keys work too</div>';
-  card.querySelector('#tut-next').onclick=function(){last?finishWelcome():renderTut(tutStep+1,1)};
-  var bk=card.querySelector('#tut-back');if(bk)bk.onclick=function(){renderTut(tutStep-1,-1)};
-  card.querySelector('#tut-skip').onclick=finishWelcome;
-  card.querySelectorAll('[data-pip]').forEach(function(b){b.onclick=function(){var j=+b.getAttribute('data-pip');renderTut(j,j>=tutStep?1:-1)}});
-  card.querySelector('#tut-next').focus();
+function card(){return document.getElementById('wl-card')}
+function obGo(step,arg){
+  obStep=step;var c=card();if(!c)return;
+  c.className='wl-card'+(step==='title'?' wl-title wl-in':' panel ob');
+  var html='';
+  if(step==='title'){
+    html='<div class="big-pip" style="width:180px;height:194px">'+pipEl('party')+'</div><h1 class="wl-logo">PIXEL LIFE</h1>'+
+      '<div class="wl-tag">Remember the important stuff, save money, and level up.</div>'+
+      '<button class="btn primary loud" id="ob-next"><span class="blink">Press start</span></button>';
+  }else if(step==='name'){
+    html=stepHead(1,'Hi! I\'m Pip.')+'<div class="big-pip">'+pipEl('happy')+'</div>'+
+      '<p>I\'m your helper. I\'ll remind you about important stuff and cheer you on when you do it.</p>'+
+      '<label for="ob-name">What should I call you?<input id="ob-name" maxlength="20" autocomplete="off" placeholder="Your first name" value="'+esc(state.profile.name||'')+'"></label>'+
+      navRow('Next');
+  }else if(step==='pick'){
+    var nm=state.profile.name;
+    html=stepHead(2,(obMade?'What else should I remind you about?':'Let\'s make your first reminder'+(nm?', '+esc(nm):'')+'!'))+
+      '<p>Pick what you want to remember. You can change everything later.</p><div class="tgrid">'+
+      TEMPLATES.map(function(t,i){return '<button class="tbtn" data-tpl="'+i+'">'+icon(t.k)+'<span>'+(t.name||'Something else')+'</span></button>'}).join('')+'</div>'+
+      navRow(null,true);
+  }else if(step==='details'){
+    var t=obTpl;
+    html=stepHead(3,'Set up your reminder')+
+      '<div style="display:flex;gap:14px;align-items:center">'+icon(t.k,'ico big')+'<label for="ob-rn" style="flex:1">What is it called?<input id="ob-rn" maxlength="40" autocomplete="off" value="'+esc(t.name)+'" placeholder="Practice piano"></label></div>'+
+      '<label for="ob-rt">What time?<input type="time" id="ob-rt" class="bigtime" value="'+t.time+'"></label>'+
+      '<div><div class="muted" style="font-size:19px;margin-bottom:6px">How often?</div><div class="choice" id="ob-often">'+
+        '<button type="button" data-v="day" aria-pressed="'+(!t.days&&!t.every)+'">Every day</button>'+
+        '<button type="button" data-v="school" aria-pressed="'+(!!t.days)+'">School days</button>'+
+        '<button type="button" data-v="hours" aria-pressed="'+(!!t.every)+'">Every few hours</button></div></div>'+
+      '<div id="ob-hours"'+(t.every?'':' hidden')+'><div class="choice" id="ob-every">'+[2,3,4,6].map(function(n){return '<button type="button" data-v="'+n+'" aria-pressed="'+((t.every||3)===n)+'">Every '+n+' hours</button>'}).join('')+'</div><div class="muted" style="font-size:18px;margin-top:4px">From the time above until 9 PM.</div></div>'+
+      '<div><div class="muted" style="font-size:19px;margin-bottom:6px">Alarm sound <span style="font-size:16px">(tap to hear it)</span></div><div class="choice" id="ob-sound">'+
+        [['chime','Chime'],['beep','Beep'],['alarm','Loud alarm']].map(function(x){return '<button type="button" data-v="'+x[0]+'" aria-pressed="'+(t.sound===x[0])+'">'+x[1]+'</button>'}).join('')+'</div></div>'+
+      '<p class="err" id="ob-err" role="alert"></p>'+navRow('Make it!',true);
+  }else if(step==='made'){
+    var r=arg;
+    html='<div class="made">'+stepHead(3,'Your reminder is ready!')+
+      '<div class="rem s-up">'+icon(r.icon)+'<div class="rt">'+fmtTime(r.time)+'</div><div class="rn"><b>'+esc(r.name)+'</b><span class="muted">'+esc(oftenText(r))+'</span></div><span class="chip good">New!</span><div class="ra"></div></div>'+
+      '<p>When it\'s time, an alarm plays and I\'ll pop up. Press <b>Done</b> when you\'ve done it.</p>'+
+      '<div class="row" style="justify-content:center;margin:0"><button class="btn" id="ob-more">Make another</button><button class="btn primary" id="ob-next">Next</button></div></div>';
+  }else if(step==='money'){
+    html=stepHead(4,'Do you get an allowance?')+'<p>Pocket money, allowance, money for chores... Pixel Life helps you save some of it.</p>'+
+      '<div class="row" style="margin:0"><button class="btn primary" id="ob-yes">Yes, I do</button><button class="btn" id="ob-no">Not right now</button></div>';
+  }else if(step==='money2'){
+    var a=obMoney.allowance,sv=obMoney.save;
+    html=stepHead(4,'Save some, spend some')+
+      '<label for="ob-al">How much do you get each week?<input id="ob-al" inputmode="decimal" value="'+a+'"></label>'+
+      '<label for="ob-sv">How much will you save? <b id="ob-svv" style="color:var(--diamond);font-weight:400">'+fmt(sv)+'</b><input type="range" class="big" id="ob-sv" min="0" max="'+a+'" step="1" value="'+sv+'"></label>'+
+      '<div class="split"><div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big" id="ob-vv">'+fmt(sv)+'</div></div><div class="panel tile wallet"><div class="label"><span>Wallet</span></div><div class="big" id="ob-wv">'+fmt(a-sv)+'</div></div></div>'+
+      '<div><div class="muted" style="font-size:19px;margin-bottom:6px">What are you saving for?</div><div class="choice" id="ob-goal">'+
+        [['A video game',60],['New shoes',80],['A bike',150],['Something big',500]].map(function(g,i){return '<button type="button" data-n="'+g[0]+'" data-a="'+g[1]+'" aria-pressed="'+(i===0)+'">'+g[0]+' ('+fmt(g[1])+')</button>'}).join('')+
+        '<button type="button" data-n="" data-a="" aria-pressed="false">Something else</button></div></div>'+
+      '<div id="ob-custom" hidden class="split"><label for="ob-gn">Goal<input id="ob-gn" maxlength="30" placeholder="Concert tickets"></label><label for="ob-ga">Cost<input id="ob-ga" inputmode="decimal" placeholder="120"></label></div>'+
+      '<p class="err" id="ob-err" role="alert"></p>'+navRow('Next',true);
+  }else if(step==='tour'){
+    var sl=tourSlides(),i=arg||0,last=i===sl.length-1;obTour=i;
+    html='<div class="slide '+(arg>=0?'sl-r':'sl-l')+'"><div class="step">'+(obReplay?'Tour':'How it works')+' · '+(i+1)+' of '+sl.length+'</div><h2>'+sl[i].h+'</h2><p>'+sl[i].p+'</p>'+sl[i].d+'</div>'+
+      '<div class="pips">'+sl.map(function(_,j){return '<button class="pip'+(j<=i?' on':'')+'" data-pip="'+j+'" aria-label="Step '+(j+1)+'"></button>'}).join('')+'</div>'+
+      '<div class="tutnav"><button class="linkbtn" id="ob-skip">Skip</button><div class="row" style="margin:0">'+(i>0?'<button class="btn" id="ob-back">Back</button>':'')+'<button class="btn primary" id="ob-next">'+(last?'Let\'s go!':'Next')+'</button></div></div>';
+  }
+  c.innerHTML=html;
+  if(step!=='title'){c.classList.remove('sl-r');void c.offsetWidth}
+  wireStep(step,arg);
+  var f=c.querySelector('input:not([type=range]),#ob-next,.tbtn');if(f)f.focus();
+}
+function stepHead(n,title){return '<div class="step">Setup · step '+n+' of 4</div><h2>'+title+'</h2>'}
+function navRow(next,back){return '<div class="tutnav"><span></span><div class="row" style="margin:0">'+(back?'<button class="btn" id="ob-back">Back</button>':'')+(next?'<button class="btn primary" id="ob-next">'+next+'</button>':'')+'</div></div>'}
+function oftenText(r){
+  if(r.every)return 'Every '+r.every+' hours, '+fmtTime(r.time)+' to '+fmtTime(r.until||'21:00');
+  if(r.days.length===7)return 'Every day';
+  if(r.days.join()==='1,2,3,4,5')return 'School days';
+  return r.days.map(function(i){return DAYN[i]}).join(', ');
+}
+function pressGroup(c,sel,onPick){
+  c.querySelectorAll(sel+' button').forEach(function(b){b.onclick=function(){
+    c.querySelectorAll(sel+' button').forEach(function(x){x.setAttribute('aria-pressed','false')});
+    b.setAttribute('aria-pressed','true');sfx('click');if(onPick)onPick(b);
+  }});
+}
+function picked(c,sel){var b=c.querySelector(sel+' [aria-pressed="true"]');return b}
+function wireStep(step,arg){
+  var c=card(),$=function(id){return c.querySelector('#'+id)};
+  var next=$('ob-next'),back=$('ob-back');
+  if(step==='title'){next.onclick=function(){obGo('name')}}
+  else if(step==='name'){next.onclick=function(){state.profile.name=$('ob-name').value.trim();commit();obGo('pick')};
+    $('ob-name').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();next.click()}}}
+  else if(step==='pick'){
+    if(back)back.onclick=function(){obGo(obMade?'made':'name',obMade?state.reminders[state.reminders.length-1]:null)};
+    c.querySelectorAll('[data-tpl]').forEach(function(b){b.onclick=function(){obTpl=TEMPLATES[+b.getAttribute('data-tpl')];sfx('pip');obGo('details')}});
+  }
+  else if(step==='details'){
+    back.onclick=function(){obGo('pick')};
+    pressGroup(c,'#ob-often',function(b){$('ob-hours').hidden=b.getAttribute('data-v')!=='hours'});
+    pressGroup(c,'#ob-every');
+    pressGroup(c,'#ob-sound',function(b){unlock();var k=b.getAttribute('data-v');setTimeout(function(){play(k)},60)});
+    next.onclick=function(){
+      var name=$('ob-rn').value.trim(),time=$('ob-rt').value,often=picked(c,'#ob-often').getAttribute('data-v');
+      if(!name)return $('ob-err').textContent='Give your reminder a name.';
+      if(!/^\d{2}:\d{2}$/.test(time))return $('ob-err').textContent='Pick a time.';
+      var r={id:'r-'+Date.now().toString(36),name:name,time:time,days:often==='school'?[1,2,3,4,5]:ALL.slice(),sound:picked(c,'#ob-sound').getAttribute('data-v'),
+        snooze:obTpl.med?5:10,note:'',on:true,since:Date.now(),icon:obTpl.k,med:!!obTpl.med};
+      if(often==='hours'){r.every=+picked(c,'#ob-every').getAttribute('data-v');r.until='21:00';if(toMin(r.until)<toMin(time))r.until=time}
+      state.reminders.push(r);state.reminders.sort(function(a,b){return toMin(a.time)-toMin(b.time)});
+      obMade++;commit();
+      lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};confetti(80);burst('gem',30);sfx('level');pipSpinUntil=Date.now()+1200;
+      obGo('made',r);
+    };
+  }
+  else if(step==='made'){$('ob-more').onclick=function(){obGo('pick')};next.onclick=function(){obGo('money')}}
+  else if(step==='money'){
+    $('ob-yes').onclick=function(){obMoney={allowance:state.settings.allowance||10,save:state.settings.save||5};obGo('money2')};
+    $('ob-no').onclick=function(){state.settings.allowance=0;state.settings.save=0;commit();obGo('tour',0)};
+  }
+  else if(step==='money2'){
+    back.onclick=function(){obGo('money')};
+    var al=$('ob-al'),sv=$('ob-sv');
+    function upd(){var a=amt(al.value)||0,v=Math.min(+sv.value,a);sv.max=Math.max(1,Math.floor(a));if(+sv.value>a)sv.value=Math.floor(a);
+      v=+sv.value;$('ob-svv').textContent=fmt(v);$('ob-vv').textContent=fmt(v);$('ob-wv').textContent=fmt(Math.max(0,round(a-v)))}
+    al.oninput=upd;sv.oninput=function(){upd();sfx('click')};
+    pressGroup(c,'#ob-goal',function(b){$('ob-custom').hidden=b.getAttribute('data-n')!==''});
+    next.onclick=function(){
+      var a=amt(al.value);if(!a)return $('ob-err').textContent='Type how much you get each week.';
+      var g=picked(c,'#ob-goal'),gn=g.getAttribute('data-n'),ga=amt(g.getAttribute('data-a'));
+      if(gn===''){gn=$('ob-gn').value.trim();ga=amt($('ob-ga').value);if(!gn||!ga)return $('ob-err').textContent='Type your goal and how much it costs.'}
+      state.settings={allowance:a,save:Math.min(+sv.value,a),goalName:gn,goalAmount:ga};commit();
+      obGo('tour',0);
+    };
+  }
+  else if(step==='tour'){
+    var sl=tourSlides(),i=arg||0;
+    next.onclick=function(){i<sl.length-1?obGo('tour',i+1):finishWelcome()};
+    if(back)back.onclick=function(){obGo('tour',i-1)};
+    $('ob-skip').onclick=finishWelcome;
+    c.querySelectorAll('[data-pip]').forEach(function(b){b.onclick=function(){obGo('tour',+b.getAttribute('data-pip'))}});
+  }
+}
+function tourSlides(){
+  var s=state.settings,sp=spendAmt(),hasMed=state.reminders.some(function(r){return r.med||r.icon==='pill'||r.icon==='pen'});
+  var list=[
+    {h:'When a reminder goes off',p:'An alarm plays and a red window pops up. Press <b>Done</b> when you\'ve finished, <b>Snooze</b> for a few more minutes, or <b>Skip</b> if you\'re not doing it this time.',
+     d:'<div class="demo"><div class="rem s-due">'+icon('tooth')+'<div class="rt">7:30 AM</div><div class="rn"><b>Brush teeth</b></div><span class="chip bad">TIME!</span><div class="ra"><span class="btn sm primary">Done</span><span class="btn sm">Skip</span></div></div></div>'},
+    {h:'Fill your stars',p:'Every reminder you finish fills a star for today. Fill them all and something fun happens!',
+     d:'<div class="demo"><div class="stars">'+icon('star')+icon('star')+icon('star')+icon('star','off')+icon('star','off')+'</div></div>'},
+    {h:'Change anything',p:'Press <b>Edit</b> on a reminder to change its name, icon, time, days or sound. Press <b>Add reminder</b> to make more.',
+     d:'<div class="demo"><div class="chips">'+Object.keys(ICONS).map(function(k){return icon(k)}).join('')+'</div></div>'}
+  ];
+  if(s.allowance>0)list.push(
+    {h:'Payday!',p:'When you get your allowance, press <b>Log payday</b>. '+fmt(s.save)+' goes into your locked Vault and '+fmt(sp)+' goes into your Wallet to spend.',
+     d:'<div class="demo"><div class="tiles"><div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big">+'+fmt(s.save)+'</div></div><div class="panel tile wallet"><div class="label"><span>Wallet</span></div><div class="big">+'+fmt(sp)+'</div></div></div></div>'});
+  else list.push(
+    {h:'Saving money',p:'Got money from a birthday or chores? Press <b>Add money</b> to lock it in your Vault.',
+     d:'<div class="demo"><div class="actions"><span class="btn primary">Add money</span></div></div>'});
+  list.push(
+    {h:'Level up',p:'Every $10 you save becomes a diamond. Every $100 is a new level. Unlock advancements as you go!',
+     d:'<div class="demo"><div class="xpwrap"><span class="lvl">2</span><div class="xp"><i style="width:45%"></i></div></div><div class="gemrow">'+gem()+gem()+gem()+gem()+'</div></div>'},
+    {h:'I\'m always here',p:'Click me any time for a tip. Press <b>Tutorial</b> at the top to see this again. Grown-ups can set up updates for a parent in <b>Parent updates</b>.',
+     d:'<div class="demo" style="justify-items:center"><div style="width:120px;height:130px">'+pipEl('party')+'</div></div>'});
+  if(hasMed)list.push(
+    {h:'One important thing',p:'For medicine, keep alarms on your phone too. Pixel Life can only ring when '+(DESKTOP?'your computer is on and awake':'this page is open')+'.',
+     d:'<div class="demo"><div class="chips"><span class="chip good">Pixel Life</span><span class="chip good">Phone alarms</span></div></div>'});
+  return list;
 }
 function wlKeys(e){
-  if(!document.getElementById('wl-card'))return;
-  var inTut=!!document.querySelector('#wl-card.tut');
-  if(e.key==='Escape')finishWelcome();
-  else if(!inTut&&e.key==='Enter'){e.preventDefault();renderTut(0,1)}
-  else if(inTut&&e.key==='ArrowRight'){if(tutStep<slides().length-1)renderTut(tutStep+1,1)}
-  else if(inTut&&e.key==='ArrowLeft'){if(tutStep>0)renderTut(tutStep-1,-1)}
+  if(!card())return;
+  if(e.key==='Escape'&&(obStep==='tour'||obReplay))finishWelcome();
+  else if(obStep==='tour'&&e.key==='ArrowRight'&&e.target.tagName!=='INPUT'){var n=tourSlides().length;obTour<n-1?obGo('tour',obTour+1):finishWelcome()}
+  else if(obStep==='tour'&&e.key==='ArrowLeft'&&obTour>0)obGo('tour',obTour-1);
+  else if(obStep==='title'&&e.key==='Enter'){e.preventDefault();obGo('name')}
 }
 function finishWelcome(){
   document.removeEventListener('keydown',wlKeys);
   var wl=document.querySelector('.wl');
+  if(!obReplay){lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};confetti(140);sfx('level');pipSpinUntil=Date.now()+1500}
   if(wl)wl.classList.add('wl-out');
   setTimeout(function(){cancelAnimationFrame(wlRaf);document.getElementById('welcome-host').innerHTML=''},reducedMotion()?0:340);
-  if(!state.onboarded){state.onboarded=true;commit()}
+  if(!state.onboarded){state.onboarded=true;commit();setTimeout(function(){say('You\'re all set'+(state.profile.name?', '+state.profile.name:'')+'! Click me if you need help.')},600)}
 }
+
 function startParticles(){
   var cv=document.getElementById('wl-cv');if(!cv||reducedMotion())return;
   var ctx=cv.getContext('2d'),ps=[],cols=['#4aedd9','#a8fdf0','#80d42a','#f5c542','#259a8c'];
@@ -1374,6 +1627,7 @@ render();
 setInterval(function(){tick();renderToday();updateBuddy()},5000);
 updateBuddy();lastLevel=Math.floor(state.vault/100);
 setTimeout(maybeWelcome,6000);
+if(!ALARM_ONLY)startAmbient();
 document.addEventListener('visibilitychange',function(){tick();renderToday()});
 tick();
 function goLocal(){if(mode==='db')return;mode='local';render();tick();maybeWelcome()}
