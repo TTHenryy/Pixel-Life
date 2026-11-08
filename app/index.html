@@ -139,7 +139,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .row.end{justify-content:flex-end}
 .row .grow{margin-right:auto}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:grid;place-items:center;padding:16px;z-index:50;overflow-y:auto}
-.overlay.alarm{z-index:70;background:rgba(40,0,0,.78)}
+.overlay.alarm{z-index:90;background:rgba(40,0,0,.78)}
 .dialog{width:min(480px,100%);display:grid;gap:12px}
 .dialog h2{margin:0;font-size:12px;line-height:1.6}
 .dialog p{margin:0}
@@ -155,7 +155,59 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .toast .t1{font-family:var(--display);font-size:9px;color:var(--gold)}
 .toast .t2{font-size:22px}
 @keyframes slide{from{transform:translateX(120%)}to{transform:none}}
-@media (prefers-reduced-motion:reduce){.toast,.rem.s-due,.alarmbox{animation:none}}
+/* motion */
+.btn{transition:transform .08s ease-out,background-color .15s,filter .15s}
+.btn:active:not(:disabled){transform:translateY(2px);filter:brightness(.92)}
+.overlay{animation:fade .18s ease-out}
+.dialog{animation:pop .24s cubic-bezier(.2,.9,.3,1.25)}
+@keyframes fade{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(8px)}}
+.xp i,.meter i{transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.wrap.intro>*{animation:rise .45s ease-out both}
+.wrap.intro>*:nth-child(2){animation-delay:.05s}.wrap.intro>*:nth-child(3){animation-delay:.1s}
+.wrap.intro>*:nth-child(4){animation-delay:.15s}.wrap.intro>*:nth-child(5){animation-delay:.2s}
+.wrap.intro>*:nth-child(n+6){animation-delay:.25s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.panel,.rem,.a,.slot{transition:border-color .2s,background-color .2s}
+.a.on{animation:none}
+/* welcome + tutorial */
+.wl{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;overflow-y:auto;
+  background:radial-gradient(ellipse at 50% 25%,#20303a 0%,#17171c 65%)}
+.wl canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.wl-card{position:relative;width:min(660px,100%);display:grid;gap:18px}
+.wl-title{text-align:center;justify-items:center}
+.wl-gem svg{width:104px;height:92px;animation:bob 2.4s ease-in-out infinite;filter:drop-shadow(0 10px 0 rgba(0,0,0,.35))}
+@keyframes bob{50%{transform:translateY(-12px)}}
+.wl-logo{font-family:var(--display);font-size:clamp(26px,7vw,48px);color:var(--diamond);text-shadow:4px 4px 0 #0d4a44,8px 8px 0 #000;letter-spacing:2px;margin:0}
+.wl-tag{color:var(--muted);font-size:24px;max-width:36ch}
+.blink{animation:blink 1.1s steps(2) infinite}
+@keyframes blink{50%{opacity:.4}}
+.linkbtn{background:none;border:0;color:var(--muted);font-family:var(--body);font-size:20px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--text)}
+.linkbtn:focus-visible{outline:3px solid var(--diamond);outline-offset:2px}
+.wl-in{animation:rise .5s ease-out both}
+.wl-out{animation:wlout .35s ease-in forwards}
+@keyframes wlout{to{opacity:0;transform:scale(1.03)}}
+.tut .slide{display:grid;gap:14px;align-content:start;min-height:330px}
+.tut h2{font-size:14px;color:var(--gold);margin:0;line-height:1.5}
+.tut p{margin:0;max-width:60ch}
+.tut .step{font-family:var(--display);font-size:9px;color:var(--muted)}
+.sl-r{animation:slr .32s ease-out}.sl-l{animation:sll .32s ease-out}
+@keyframes slr{from{opacity:0;transform:translateX(28px)}}
+@keyframes sll{from{opacity:0;transform:translateX(-28px)}}
+.pips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pip{width:24px;height:12px;background:#0e0e12;border:2px solid #000;padding:0;cursor:pointer}
+.pip.on{background:var(--xp);box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
+.demo{background:#1b1b22;border:3px solid #000;padding:12px;display:grid;gap:10px}
+.demo .tiles{grid-template-columns:1fr 1fr}
+.demo .tile .big{font-size:20px;margin:8px 0 0}
+.demo .xpwrap{margin:16px 0 4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.gemrow{display:flex;gap:6px}.gemrow svg{width:30px;height:27px}
+.tutnav{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tutnav .row{margin:0}
+.keys{color:var(--muted);font-size:18px;text-align:center}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:760px){
   .tiles{grid-template-columns:1fr}
   .two{grid-template-columns:1fr}
@@ -173,6 +225,7 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 <div id="root"></div>
 <div id="modal-host"></div>
 <div id="alarm-host"></div>
+<div id="welcome-host"></div>
 <script type="application/json" id="state">{"v":1,"settings":{"allowance":50,"save":40,"goalName":"First $1,000","goalAmount":1000},"vault":11,"wallet":0,"log":[{"t":1794112401686,"k":"bonus","a":11,"n":"found it"}],"ach":{},"updated":1794112401686}</script>
 <script id="app">
 (function(){
@@ -223,6 +276,7 @@ function normalize(s){
     if(s.alarm&&typeof s.alarm==='object')d.alarm=Object.assign(d.alarm,s.alarm);
     if(s.mig3)d.mig3=true;
     if(s.mig4)d.mig4=true;
+    if(s.onboarded)d.onboarded=true;
     if(s.snz&&typeof s.snz==='object')d.snz=s.snz;
   }
   if(!d.reminders){d.reminders=defaultReminders();d.mig3=true}
@@ -447,9 +501,10 @@ function pollDesk(first){
   checkVersion();
   fetch('/api/state',{cache:'no-store'}).then(function(r){return r.json()}).then(function(d){
     if(statusMsg&&/desktop app/i.test(statusMsg)){statusMsg='';renderStatus()}
-    if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk()}return}
+    if(!d||typeof d!=='object'||!d.v){if(first){state.updated=state.updated||Date.now();flushDesk();maybeWelcome()}return}
     if(!writing&&(d.updated||0)>(state.updated||0)){state=normalize(d);render();tick()}
     else if(first&&(state.updated||0)>(d.updated||0))flushDesk();
+    if(first)maybeWelcome();
   }).catch(function(){statusMsg='Lost the desktop app. Reopen Pixel Life.exe.';renderStatus()});
 }
 function commit(){
@@ -550,7 +605,8 @@ var ACT={
   },
   addrem:function(){editReminder(null)},
   sound:function(){unlock();setTimeout(function(){play('chime');renderSound()},80)},
-  settings:function(){saveSettings(document.getElementById('st-form'))}
+  settings:function(){saveSettings(document.getElementById('st-form'))},
+  tour:function(){showWelcome(true)}
 };
 function saveSettings(f){
   var al=amt(val(f,'st-al')),sv=parseFloat(val(f,'st-sv')),gn=val(f,'st-gn').trim(),ga=amt(val(f,'st-ga'));
@@ -705,7 +761,24 @@ function renderToday(){
   el.innerHTML=rows||'<p class="empty">No reminders yet. Press Add reminder.</p>';
   var ms=document.getElementById('medstreak');if(ms)ms.textContent=medStreak(state);
 }
-var settingsOpen=false;
+var settingsOpen=false,firstRender=true,anim={xp:0,wallet:0,vault:0},vaultRaf=0;
+function reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){return false}}
+function animateTo(xp,wallet,vault){
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    var a=document.getElementById('xp-fill'),b=document.getElementById('wallet-fill');
+    if(a)a.style.width=xp+'%';if(b)b.style.width=wallet+'%';
+    anim.xp=xp;anim.wallet=wallet;
+  })});
+  var el=document.getElementById('vault-num'),from=anim.vault;
+  cancelAnimationFrame(vaultRaf);
+  if(!el||from===vault||reducedMotion()){anim.vault=vault;if(el)el.textContent=fmt(vault);return}
+  var t0=performance.now(),dur=650;
+  (function step(t){
+    var k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3),v=from+(vault-from)*e;
+    el.textContent=fmt(k<1?Math.round(v):vault);anim.vault=k<1?v:vault;
+    if(k<1)vaultRaf=requestAnimationFrame(step);
+  })(t0);
+}
 function render(){
   var s=state.settings,sp=spendAmt(),st=streak(state);
   var pct=Math.max(0,Math.min(100,state.vault/s.goalAmount*100));
@@ -732,8 +805,8 @@ function render(){
   var dis=readOnly?' disabled':'';
 
   document.getElementById('root').innerHTML=
-  '<div class="wrap">'+
-   '<header class="top"><div class="brand">'+gem()+'<div><h1>Pixel Life</h1><div class="sub">Reminders and savings in one place.</div></div></div><span id="status">'+statusHtml()+'</span></header>'+
+  '<div class="wrap'+(firstRender?' intro':'')+'">'+
+   '<header class="top"><div class="brand">'+gem()+'<div><h1>Pixel Life</h1><div class="sub">Reminders and savings in one place.</div></div></div><div class="row" style="margin:0;align-items:center"><button class="btn sm" data-act="tour">Tutorial</button><span id="status">'+statusHtml()+'</span></div></header>'+
 
    '<section class="panel"><div class="panelhead"><h2>Today\'s reminders</h2><div class="soundbar" id="soundbar"></div></div>'+
     '<div class="rems" id="today"></div>'+
@@ -742,13 +815,13 @@ function render(){
    '</section>'+
 
    '<section class="tiles">'+
-    '<div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big">'+fmt(state.vault)+'</div><div class="muted">Money you\'ve saved. Hands off.</div></div>'+
-    '<div class="panel tile wallet"><div class="label"><span>Wallet</span><span>'+fmt(sp)+'/wk</span></div><div class="big">'+fmt(state.wallet)+'</div><div class="meter" aria-hidden="true"><i style="width:'+walletPct+'%"></i></div><div class="muted" style="margin-top:6px">'+(state.wallet>sp?'Leftovers! Move them to the vault.':state.wallet<=0?'Empty until next payday.':'This is all you can spend.')+'</div></div>'+
+    '<div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big" id="vault-num">'+fmt(anim.vault)+'</div><div class="muted">Money you\'ve saved. Hands off.</div></div>'+
+    '<div class="panel tile wallet"><div class="label"><span>Wallet</span><span>'+fmt(sp)+'/wk</span></div><div class="big">'+fmt(state.wallet)+'</div><div class="meter" aria-hidden="true"><i id="wallet-fill" style="width:'+anim.wallet+'%"></i></div><div class="muted" style="margin-top:6px">'+(state.wallet>sp?'Leftovers! Move them to the vault.':state.wallet<=0?'Empty until next payday.':'This is all you can spend.')+'</div></div>'+
     '<div class="panel tile streak"><div class="label"><span>Streak</span><span>'+(st>=4?'On fire':'Keep going')+'</span></div><div class="big">'+st+' wk'+(st===1?'':'s')+'</div><div class="muted">Paydays in a row without breaking the vault.</div></div>'+
    '</section>'+
 
    '<section class="panel"><div class="goalhead"><h2 style="margin:0">Goal</h2><span class="goalname">'+esc(s.goalName)+': '+fmt(s.goalAmount)+'</span></div>'+
-    '<div class="xpwrap"><span class="lvl">'+lvl+'</span><div class="xp" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Goal progress"><i style="width:'+pct+'%"></i></div></div>'+
+    '<div class="xpwrap"><span class="lvl">'+lvl+'</span><div class="xp" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(pct)+'" aria-label="Goal progress"><i id="xp-fill" style="width:'+anim.xp+'%"></i></div></div>'+
     '<div class="facts"><span><b>'+Math.floor(pct)+'%</b> there</span>'+goalLine+'<span>Level = every $100 saved</span></div></section>'+
 
    '<section class="panel"><h2>Money</h2><div class="actions">'+
@@ -779,6 +852,8 @@ function render(){
   '</div><div class="toasts" id="toasts" aria-live="polite"></div>';
   document.getElementById('st-details').addEventListener('toggle',function(){settingsOpen=this.open});
   renderToday();renderSound();
+  firstRender=false;
+  animateTo(pct,walletPct,state.vault);
 }
 document.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b||b.disabled)return;
@@ -790,13 +865,103 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('submit',function(e){if(e.target.id==='st-form'){e.preventDefault();saveSettings(e.target)}});
 
+/* ---------- welcome + tutorial ---------- */
+var welcomeShown=false,tutStep=0,wlRaf=0;
+function maybeWelcome(){if(!state.onboarded&&!welcomeShown)showWelcome(false)}
+function slides(){
+  var s=state.settings,sp=spendAmt();
+  return [
+    {h:'Welcome to Pixel Life',p:'Your medicine reminders and your savings, in one place. This tour takes about a minute, and you can replay it any time from the Tutorial button.',
+     d:'<div class="demo"><div class="gemrow">'+gem()+gem()+gem()+'</div><div class="chips"><span class="chip good">Reminders</span><span class="chip warn">Savings</span><span class="chip">Advancements</span></div></div>'},
+    {h:'Reminders',p:'When something is due, an alarm sounds and a red box pops up. Press <b>Taken</b> when you take it, <b>Snooze</b> for a few more minutes, or <b>Skip</b> if you are not taking that dose.',
+     d:'<div class="demo"><div class="rem s-due"><div class="rt">10:00 PM</div><div class="rn"><b>Glargine</b><span class="muted">Long-acting insulin</span></div><span class="chip bad">TAKE NOW</span><div class="ra"><span class="btn sm primary">Taken</span><span class="btn sm">Skip</span></div></div></div>'},
+    {h:'Make reminders yours',p:'Press <b>Edit</b> on any reminder to change its time, days, sound or snooze length. Timers like Kirsty repeat every few hours, day and night. Use <b>Add reminder</b> for anything else, like checking your blood sugar.',
+     d:'<div class="demo"><div class="chips"><span class="chip">Once a day</span><span class="chip">Every 3 hours</span><span class="chip good">Timer: day and night</span><span class="chip">Chime</span><span class="chip">Beep</span><span class="chip bad">Alarm</span></div></div>'},
+    {h:'Sound',p:DESKTOP?'The desktop app plays alarms for you, even with this window closed, and keeps your PC from falling asleep. If the window is closed, a pop-up appears: Yes means Taken, No means Snooze.':'Browsers block sound until you tap the page. Each time you open Pixel Life, tap the red <b>Sound is off</b> button once.',
+     d:'<div class="demo"><div class="soundbar">'+(DESKTOP?'<span class="chip good">Sound by desktop app</span>':'<span class="btn danger">Sound is off: tap to turn on</span>')+'<span class="btn sm">Test sound</span></div></div>'},
+    {h:'Payday',p:'When you get your allowance, press <b>Log payday</b>. '+fmt(s.save)+' locks into the Vault and '+fmt(sp)+' goes to your Wallet to spend.',
+     d:'<div class="demo"><div class="tiles"><div class="panel tile vault"><div class="label"><span>Vault</span><span class="lock">LOCKED</span></div><div class="big">+'+fmt(s.save)+'</div></div><div class="panel tile wallet"><div class="label"><span>Wallet</span></div><div class="big">+'+fmt(sp)+'</div></div></div></div>'},
+    {h:'The Vault stays locked',p:'You can only spend what is in your Wallet. Breaking the Vault means typing why, and it resets your streak. Have money left over? Move it into the Vault.',
+     d:'<div class="demo"><div class="actions"><span class="btn">Spend from wallet</span><span class="btn">Move leftovers to vault</span><span class="btn danger">Break the vault</span></div></div>'},
+    {h:'Level up',p:'Every $100 saved is a level on your goal bar. Every $10 is a diamond in your inventory. Unlock advancements for streaks, goals and taking every reminder.',
+     d:'<div class="demo"><div class="xpwrap"><span class="lvl">3</span><div class="xp"><i style="width:38%"></i></div></div><div class="gemrow">'+gem()+gem()+gem()+gem()+gem()+'</div></div>'},
+    {h:'One last thing',p:'Pixel Life can only sound alarms while '+(DESKTOP?'your PC is on and awake':'this page is open and your device is awake')+'. Keep alarms on your phone and your Dexcom alerts turned on as a backup, especially overnight.',
+     d:'<div class="demo"><div class="chips"><span class="chip good">Pixel Life</span><span class="chip good">Phone alarms</span><span class="chip good">Dexcom alerts</span></div></div>'}
+  ];
+}
+function showWelcome(replay){
+  welcomeShown=true;tutStep=0;
+  var host=document.getElementById('welcome-host');
+  host.innerHTML='<div class="wl" role="dialog" aria-modal="true" aria-label="Welcome to Pixel Life"><canvas id="wl-cv" aria-hidden="true"></canvas><div class="wl-card wl-title wl-in" id="wl-card">'+
+    '<div class="wl-gem">'+gem()+'</div><h1 class="wl-logo">PIXEL LIFE</h1>'+
+    '<div class="wl-tag">Reminders and savings, one level at a time.</div>'+
+    '<button class="btn primary loud" id="wl-start"><span class="blink">Press start</span></button>'+
+    '<button class="linkbtn" id="wl-skip">'+(replay?'Close':'Skip the tutorial')+'</button></div></div>';
+  startParticles();
+  host.querySelector('#wl-start').onclick=function(){renderTut(0,1)};
+  host.querySelector('#wl-skip').onclick=finishWelcome;
+  host.querySelector('#wl-start').focus();
+  document.addEventListener('keydown',wlKeys);
+}
+function renderTut(i,dir){
+  var list=slides();tutStep=Math.max(0,Math.min(list.length-1,i));
+  var sl=list[tutStep],last=tutStep===list.length-1;
+  var pips=list.map(function(_,j){return '<button class="pip'+(j<=tutStep?' on':'')+'" data-pip="'+j+'" aria-label="Step '+(j+1)+'"></button>'}).join('');
+  var card=document.getElementById('wl-card');
+  card.className='wl-card tut panel'+(dir===1&&tutStep===0?' wl-in':'');
+  card.innerHTML='<div class="slide '+(dir>0?'sl-r':'sl-l')+'"><div class="step">Step '+(tutStep+1)+' of '+list.length+'</div><h2>'+sl.h+'</h2><p>'+sl.p+'</p>'+sl.d+'</div>'+
+    '<div class="pips">'+pips+'</div>'+
+    '<div class="tutnav"><button class="linkbtn" id="tut-skip">Skip</button><div class="row">'+
+    (tutStep>0?'<button class="btn" id="tut-back">Back</button>':'')+
+    '<button class="btn primary" id="tut-next">'+(last?'Let\'s go!':'Next')+'</button></div></div>'+
+    '<div class="keys">Arrow keys work too</div>';
+  card.querySelector('#tut-next').onclick=function(){last?finishWelcome():renderTut(tutStep+1,1)};
+  var bk=card.querySelector('#tut-back');if(bk)bk.onclick=function(){renderTut(tutStep-1,-1)};
+  card.querySelector('#tut-skip').onclick=finishWelcome;
+  card.querySelectorAll('[data-pip]').forEach(function(b){b.onclick=function(){var j=+b.getAttribute('data-pip');renderTut(j,j>=tutStep?1:-1)}});
+  card.querySelector('#tut-next').focus();
+}
+function wlKeys(e){
+  if(!document.getElementById('wl-card'))return;
+  var inTut=!!document.querySelector('#wl-card.tut');
+  if(e.key==='Escape')finishWelcome();
+  else if(!inTut&&e.key==='Enter'){e.preventDefault();renderTut(0,1)}
+  else if(inTut&&e.key==='ArrowRight'){if(tutStep<slides().length-1)renderTut(tutStep+1,1)}
+  else if(inTut&&e.key==='ArrowLeft'){if(tutStep>0)renderTut(tutStep-1,-1)}
+}
+function finishWelcome(){
+  document.removeEventListener('keydown',wlKeys);
+  var wl=document.querySelector('.wl');
+  if(wl)wl.classList.add('wl-out');
+  setTimeout(function(){cancelAnimationFrame(wlRaf);document.getElementById('welcome-host').innerHTML=''},reducedMotion()?0:340);
+  if(!state.onboarded){state.onboarded=true;commit()}
+}
+function startParticles(){
+  var cv=document.getElementById('wl-cv');if(!cv||reducedMotion())return;
+  var ctx=cv.getContext('2d'),ps=[],cols=['#4aedd9','#a8fdf0','#80d42a','#f5c542','#259a8c'];
+  function size(){cv.width=innerWidth;cv.height=innerHeight}
+  size();addEventListener('resize',size);
+  for(var i=0;i<46;i++)ps.push({x:Math.random()*cv.width,y:Math.random()*cv.height,s:2+Math.floor(Math.random()*3)*2,v:.2+Math.random()*.6,c:cols[i%cols.length],w:Math.random()*6.28});
+  (function frame(){
+    if(!document.getElementById('wl-cv'))return;
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(function(p){
+      p.y-=p.v;p.w+=.02;if(p.y<-10){p.y=cv.height+10;p.x=Math.random()*cv.width}
+      ctx.globalAlpha=.35+.35*Math.sin(p.w);ctx.fillStyle=p.c;
+      ctx.fillRect(Math.round(p.x+Math.sin(p.w)*8),Math.round(p.y),p.s,p.s);
+    });
+    ctx.globalAlpha=1;wlRaf=requestAnimationFrame(frame);
+  })();
+}
+
 /* ---------- start ---------- */
 adoptLocal();
 render();
 setInterval(function(){tick();renderToday()},5000);
+setTimeout(maybeWelcome,6000);
 document.addEventListener('visibilitychange',function(){tick();renderToday()});
 tick();
-function goLocal(){if(mode==='db')return;mode='local';render();tick()}
+function goLocal(){if(mode==='db')return;mode='local';render();tick();maybeWelcome()}
 function subscribe(){
   var timer=setTimeout(function(){if(!loaded){statusMsg='Can\'t reach your saved data yet. Changes stay on this device.';renderStatus()}},10000);
   docRef.onSnapshot(function(snap){
@@ -806,9 +971,9 @@ function subscribe(){
       if(!snap.metadata.hasPendingWrites&&(d.updated||0)>(state.updated||0)){
         state=normalize(clone(d));lsSet(LS,JSON.stringify(state));render();tick();
       }else if(!loaded&&(state.updated||0)>(d.updated||0)){scheduleFlush()}
-      loaded=true;
+      loaded=true;maybeWelcome();
     }else if(!snap.metadata.fromCache&&!loaded){
-      loaded=true;state.updated=state.updated||Date.now();scheduleFlush();
+      loaded=true;state.updated=state.updated||Date.now();scheduleFlush();maybeWelcome();
     }
   },function(e){
     clearTimeout(timer);
