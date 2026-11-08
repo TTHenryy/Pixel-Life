@@ -147,10 +147,22 @@ input:focus-visible,select:focus-visible{outline:3px solid var(--diamond);outlin
 .overlay.alarm{background:repeating-linear-gradient(45deg,rgba(70,6,10,.9) 0 26px,rgba(40,0,4,.9) 26px 52px);background-size:74px 74px;animation:fade .2s ease-out,stripes 1.6s linear infinite}
 @keyframes stripes{to{background-position:74px 0}}
 .al-top{display:flex;gap:14px;align-items:center}
-.al-pip{width:68px;height:62px;flex:none}
-.al-pip svg{width:68px;height:62px;animation:alertb .45s steps(2) infinite}
+.al-pip{width:100px;height:108px;flex:none}
+.alrow{position:relative;overflow:hidden;transition:max-height .38s cubic-bezier(.4,0,.2,1),opacity .3s,transform .38s cubic-bezier(.4,0,.2,1),padding .38s,margin .38s,border-width .38s,border-color .15s,background-color .15s}
+.alrow.got{border-color:var(--xp);background:#203a1a}
+.alrow.got::after{content:"TAKEN!";position:absolute;right:14px;top:50%;font-family:var(--display);font-size:16px;color:var(--xp);text-shadow:3px 3px 0 #000;animation:stamp .25s cubic-bezier(.2,.9,.3,1.5) forwards;transform:translateY(-50%) rotate(-8deg)}
+.alrow.got.skip{border-color:var(--muted);background:#2a2a30}.alrow.got.skip::after{content:"SKIPPED";color:var(--muted)}
+.alrow.got.snz{border-color:var(--gold);background:#3a3212}.alrow.got.snz::after{content:"SNOOZED";color:var(--gold)}
+@keyframes stamp{from{opacity:0;transform:translateY(-50%) rotate(-8deg) scale(2.2)}to{opacity:1;transform:translateY(-50%) rotate(-8deg) scale(1)}}
+.alrow.leaving{opacity:0;transform:translateX(70px) scale(.96);max-height:0!important;padding-top:0;padding-bottom:0;margin-top:-12px;border-width:0}
+.overlay.closing{animation:fadeout .32s ease-in forwards}
+.overlay.closing .dialog{animation:shrink .32s ease-in forwards}
+@keyframes fadeout{to{opacity:0}}
+@keyframes shrink{to{opacity:0;transform:scale(.9) translateY(10px)}}
+.rem.got{border-color:var(--xp);background:#203a1a;transition:background-color .15s,border-color .15s}
 .al-sub{color:var(--muted);font-size:20px}
 .alrow{animation:rise .3s ease-out both}
+.alarmbox.settled .alrow{animation:none}
 .alrow:nth-child(3){animation-delay:.06s}.alrow:nth-child(4){animation-delay:.12s}.alrow:nth-child(5){animation-delay:.18s}
 .al-time{font-family:var(--display);font-size:9px;color:var(--diamond)}
 .al-all{display:flex;justify-content:center}
@@ -235,13 +247,11 @@ body.alarm-only{background:#1a0004}
 @keyframes spin{to{transform:rotateY(360deg)}}
 .a.on:hover{box-shadow:inset 0 0 0 2px #000,0 0 0 3px rgba(245,197,66,.35)}
 .buddy{position:fixed;right:18px;bottom:18px;z-index:60;display:grid;justify-items:end;gap:8px;pointer-events:none}
-.buddy-btn{pointer-events:auto;background:none;border:0;padding:0;cursor:pointer;width:76px;height:70px;position:relative}
+.buddy-btn{pointer-events:auto;background:none;border:0;padding:0;cursor:pointer;width:110px;height:120px;position:relative}
 .buddy-btn:focus-visible{outline:3px solid var(--diamond);outline-offset:4px}
-.buddy-btn svg{width:76px;height:70px;animation:idle 1.6s steps(2) infinite;filter:drop-shadow(0 6px 0 rgba(0,0,0,.4))}
-.buddy[data-mood="alert"] .buddy-btn svg{animation:alertb .45s steps(2) infinite}
-.buddy[data-mood="party"] .buddy-btn svg{animation:party .5s ease-in-out infinite}
-.buddy[data-mood="sleepy"] .buddy-btn svg{animation:idle 3s steps(2) infinite}
-.buddy-btn.hop svg{animation:hop .45s cubic-bezier(.3,1.6,.5,1)}
+canvas.pip3d{display:block;width:100%;height:100%}
+.buddy-btn canvas.pip3d{width:110px;height:120px}
+.buddy-btn.hop canvas{animation:hop .5s cubic-bezier(.3,1.6,.5,1)}
 @keyframes idle{50%{transform:translateY(-3px)}}
 @keyframes alertb{50%{transform:translateY(-8px)}}
 @keyframes party{25%{transform:translateY(-10px) rotate(-6deg)}75%{transform:translateY(-10px) rotate(6deg)}}
@@ -256,7 +266,7 @@ body.alarm-only{background:#1a0004}
 .steps{margin:0;padding-left:1.4em;display:grid;gap:4px;max-width:70ch}
 .pform{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
 @media (max-width:760px){.pform{grid-template-columns:1fr}}
-@media (max-width:420px){.buddy-btn,.buddy-btn svg{width:58px;height:54px}}
+@media (max-width:420px){.buddy-btn,.buddy-btn canvas.pip3d{width:76px;height:84px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media (max-width:760px){
   .tiles{grid-template-columns:1fr}
@@ -723,7 +733,31 @@ function setDose(key,s){
   else{sfx('click');notifyParent('skipped','Pixel Life',kidName()+' skipped '+medName(nm)+' at '+clock(Date.now())+'.')}
   commit();
 }
+var leaveFxAt=0;
+function leaveThen(btn,kind,done){
+  var row=btn.closest('.alrow')||btn.closest('.rem');
+  if(!row||reducedMotion()||row.classList.contains('got'))return row&&row.classList.contains('got')?null:done();
+  row.querySelectorAll('button').forEach(function(x){x.disabled=true});
+  if(kind==='taken'){burst('gem',14);sfx('taken');leaveFxAt=Date.now()}
+  row.classList.add('got');if(kind==='skipped')row.classList.add('skip');if(kind==='snz')row.classList.add('snz');
+  if(!row.classList.contains('alrow')){setTimeout(done,320);return}
+  setTimeout(function(){
+    row.style.maxHeight=row.offsetHeight+'px';void row.offsetHeight;row.classList.add('leaving');
+    setTimeout(done,390);
+  },420);
+}
 function takeAll(){
+  var rows=[].slice.call(document.querySelectorAll('#alarm-host .alrow'));
+  if(rows.length&&!reducedMotion()){
+    var btn=document.querySelector('[data-takeall]');if(btn)btn.disabled=true;
+    rows.forEach(function(r,i){setTimeout(function(){r.classList.add('got');r.querySelectorAll('button').forEach(function(x){x.disabled=true})},i*110)});
+    setTimeout(function(){rows.forEach(function(r,i){setTimeout(function(){r.style.maxHeight=r.offsetHeight+'px';void r.offsetHeight;r.classList.add('leaving')},i*90)})},rows.length*110+300);
+    setTimeout(takeAllNow,rows.length*110+300+rows.length*90+400);
+    return;
+  }
+  takeAllNow();
+}
+function takeAllNow(){
   var due=dueList();if(!due.length)return;
   var now=Date.now(),names=[];
   due.forEach(function(o){state.doses[o.key]={s:'taken',t:now};delete SZ()[o.key];names.push(medName(o.r.name))});
@@ -812,11 +846,15 @@ function tick(){
     if(alarmKey){
       alarmKey='';
       if(ALARM_ONLY){
-        document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipSvg('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div><button class="btn" id="al-close">Close</button></div></div>';
+        document.getElementById('alarm-host').innerHTML='<div class="overlay"><div class="dialog panel al-done"><div class="al-pip">'+pipEl('party')+'</div><h2>All done!</h2><div class="al-sub">Nice work. This window closes by itself.</div><button class="btn" id="al-close">Close</button></div></div>';
         lastPt={x:innerWidth/2,y:innerHeight/2,t:Date.now()};burst('gem',30);
         document.getElementById('al-close').onclick=function(){window.close()};
         setTimeout(function(){if(!dueList().length)window.close()},2500);
-      }else document.getElementById('alarm-host').innerHTML='';
+      }else{
+        var ov=document.querySelector('#alarm-host .overlay');
+        if(ov&&!reducedMotion()){ov.classList.add('closing');setTimeout(function(){if(!alarmKey)document.getElementById('alarm-host').innerHTML=''},330)}
+        else document.getElementById('alarm-host').innerHTML='';
+      }
     }
     lastRing=0;document.title='Pixel Life';
   }
@@ -829,11 +867,13 @@ function renderAlarm(due){
       '<button class="btn" data-snooze="'+k+'">Snooze '+(r.snooze||10)+' min</button>'+
       '<button class="btn sm" data-dose="skipped" data-key="'+k+'">Skip</button></div></div>';
   }).join('');
-  document.getElementById('alarm-host').innerHTML='<div class="overlay alarm"><div class="dialog panel alarmbox" role="alertdialog" aria-labelledby="al-h">'+
-    '<div class="al-top"><div class="al-pip">'+pipSvg('alert')+'</div><div><h2 id="al-h">'+(due.length>1?'Time to take these!':'Time to take it!')+'</h2><div class="al-sub">'+clock(Date.now())+(due.length>1?' · '+due.length+' reminders at once':'')+'</div></div></div>'+rows+
+  var inner=
+    '<div class="al-top"><div class="al-pip">'+pipEl('alert')+'</div><div><h2 id="al-h">'+(due.length>1?'Time to take these!':'Time to take it!')+'</h2><div class="al-sub">'+clock(Date.now())+(due.length>1?' · '+due.length+' reminders at once':'')+'</div></div></div>'+rows+
     (due.length>1?'<div class="al-all"><button class="btn primary loud" data-takeall="1">Taken all '+due.length+'</button></div>':'')+
-    (soundOn()?'':'<button class="btn danger loud" data-act="sound">Sound is off: tap to turn it on</button>')+
-    '</div></div>';
+    (soundOn()?'':'<button class="btn danger loud" data-act="sound">Sound is off: tap to turn it on</button>');
+  var box=document.querySelector('#alarm-host .overlay.alarm:not(.closing) .alarmbox');
+  if(box){box.innerHTML=inner;box.classList.add('settled')}
+  else document.getElementById('alarm-host').innerHTML='<div class="overlay alarm"><div class="dialog panel alarmbox" role="alertdialog" aria-labelledby="al-h">'+inner+'</div></div>';
   var b=document.querySelector('#alarm-host [data-dose]');if(b)b.focus();
 }
 
@@ -1015,9 +1055,9 @@ document.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b||b.disabled)return;
   if(!b.hasAttribute('data-dose')&&!b.closest('.buddy'))sfx('click');
   if(b.hasAttribute('data-takeall'))return takeAll();
-  if(b.hasAttribute('data-dose'))return setDose(b.getAttribute('data-key'),b.getAttribute('data-dose'));
+  if(b.hasAttribute('data-dose')){var key=b.getAttribute('data-key'),kind=b.getAttribute('data-dose');return leaveThen(b,kind,function(){setDose(key,kind)})}
   if(b.hasAttribute('data-undo'))return undoDose(b.getAttribute('data-undo'));
-  if(b.hasAttribute('data-snooze'))return snooze(b.getAttribute('data-snooze'));
+  if(b.hasAttribute('data-snooze')){var sk=b.getAttribute('data-snooze');return leaveThen(b,'snz',function(){snooze(sk)})}
   if(b.hasAttribute('data-edit'))return editReminder(b.getAttribute('data-edit'));
   var a=b.getAttribute('data-act');if(a&&ACT[a])ACT[a]();
 });
@@ -1080,8 +1120,8 @@ function kidName(){return (state.parent&&state.parent.kid)||'Your kid'}
 function medName(n){return state.parent&&state.parent.hide?'a reminder':n}
 var CHEERS=['Nice job!','Great work!','Another one done!','You got this!','Way to go!','Keep it up!'];
 function celebrate(kind,detail){
-  recentWin=Date.now();
-  if(kind==='taken'){burst('gem',20);floater('+1 done!','green');sfx('taken');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+' is checked off.':''))}
+  recentWin=Date.now();pipSpinUntil=Date.now()+900;
+  if(kind==='taken'){if(Date.now()-leaveFxAt>1500){burst('gem',20);sfx('taken')}floater('+1 done!','green');say(CHEERS[Math.floor(Math.random()*CHEERS.length)]+(detail?' '+detail+' is checked off.':''))}
   else if(kind==='pay'){burst('gold',26);floater('+'+detail+' saved','');sfx('coin');say('Ka-ching! '+detail+' went into your vault.')}
   else if(kind==='bonus'){burst('gem',18);floater('+'+detail,'');sfx('coin');say('Bonus loot! '+detail+' is locked away.')}
 }
@@ -1095,7 +1135,97 @@ function levelUp(n){
   say('Level '+n+'! You are getting good at this.');
   notifyParent('level','Pixel Life',kidName()+' reached savings level '+n+' ('+fmt(n*100)+' saved)!');
 }
-/* Pip, an original pixel helper */
+/* Pip: an original 3D voxel robot, drawn live on canvas */
+function pipEl(mood){return '<canvas class="pip3d" data-mood="'+mood+'" aria-hidden="true"></canvas>'}
+var PIP_MODELS={},pipMouse={x:-1,y:-1,t:0},pipSpinUntil=0;
+addEventListener('pointermove',function(e){pipMouse.x=e.clientX;pipMouse.y=e.clientY;pipMouse.t=Date.now()});
+function pipModel(mood){
+  if(PIP_MODELS[mood])return PIP_MODELS[mood];
+  var m={},C={body:'#2a9d8f',bodyd:'#1f7a6f',head:'#4aedd9',headl:'#8ff7ea',visor:'#0b1a1f',eye:'#c8fff8',gem:'#f5c542',chest:'#f5c542',foot:'#16584f',arm:'#3cc9b8',ear:'#80d42a'};
+  function put(x,y,z,c){m[x+','+y+','+z]=c}
+  function box(x0,x1,y0,y1,z0,z1,c){for(var x=x0;x<=x1;x++)for(var y=y0;y<=y1;y++)for(var z=z0;z<=z1;z++)put(x,y,z,c)}
+  box(-2,-1,0,0,-1,0,C.foot);box(1,2,0,0,-1,0,C.foot);            // feet
+  box(-2,2,1,3,-1,1,C.body);                                        // body
+  box(-2,2,1,1,-1,1,C.bodyd);                                       // belt
+  put(0,2,1,C.chest);                                               // chest gem
+  box(-3,-3,2,3,0,0,C.arm);box(3,3,2,3,0,0,C.arm);                  // arms
+  box(-3,3,4,8,-2,2,C.head);                                        // head
+  box(-3,3,8,8,-2,2,C.headl);                                       // head top
+  box(-2,2,5,7,2,2,C.visor);                                        // visor (front)
+  put(-4,6,0,C.ear);put(4,6,0,C.ear);                               // ear lights
+  box(0,0,9,10,0,0,C.bodyd);put(0,11,0,C.gem);                      // antenna + gem
+  var E=C.eye,faces={
+    happy:[[-1,6],[1,6],[-1,7],[1,7]],
+    alert:[[-2,6],[-2,7],[2,6],[2,7],[0,5]],
+    sleepy:[[-2,6],[-1,6],[1,6],[2,6]],
+    party:[[-2,6],[-1,7],[1,7],[2,6],[-1,5],[0,5],[1,5]]
+  };
+  (faces[mood]||faces.happy).forEach(function(f){put(f[0],f[1],2,E)});
+  if(mood==='happy'){put(-1,5,2,'#5fd3c4');put(0,5,2,'#5fd3c4');put(1,5,2,'#5fd3c4')}
+  var list=[];
+  Object.keys(m).forEach(function(k){var p=k.split(',').map(Number);list.push({x:p[0],y:p[1],z:p[2],c:m[k]})});
+  PIP_MODELS[mood]={map:m,list:list};
+  return PIP_MODELS[mood];
+}
+function shade(hex,f){
+  var n=parseInt(hex.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.max(0,Math.min(255,Math.round(r*f)));g=Math.max(0,Math.min(255,Math.round(g*f)));b=Math.max(0,Math.min(255,Math.round(b*f)));
+  return 'rgb('+r+','+g+','+b+')';
+}
+var PIP_DIRS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+function drawPip(cv,t){
+  var dpr=Math.min(2,window.devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;if(!w||!h)return;
+  if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+  var ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  var mood=cv.getAttribute('data-mood')||'happy',model=pipModel(mood),still=reducedMotion();
+  var sec=t/1000,yaw=0.45,bob=0;
+  if(!still){
+    var r=cv.getBoundingClientRect(),follow=0;
+    if(Date.now()-pipMouse.t<8000&&pipMouse.x>=0){follow=Math.max(-1,Math.min(1,(pipMouse.x-(r.left+r.width/2))/400))}
+    yaw=0.45+Math.sin(sec*0.9)*0.25+follow*0.6;
+    bob=mood==='alert'?Math.abs(Math.sin(sec*9))*0.9:mood==='sleepy'?Math.sin(sec*1.2)*0.25:Math.sin(sec*2.4)*0.35;
+    if(mood==='party'||Date.now()<pipSpinUntil)yaw+=sec*5;
+  }
+  var cy=Math.cos(yaw),sy=Math.sin(yaw),ph=0.42,cp=Math.cos(ph),sp=Math.sin(ph);
+  var s=h/17,cx0=w/2,cy0=h*0.5,ccy=5.5;
+  function rot(x,y,z){var X=x*cy+z*sy,Z=-x*sy+z*cy,Y=y;return [X,Y*cp-Z*sp,Y*sp+Z*cp]}
+  function scr(x,y,z){var q=rot(x,y-ccy+bob,z);return [cx0+q[0]*s,cy0-q[1]*s,q[2]]}
+  // ground shadow
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();
+  var g=scr(0,-0.2-bob,0);ctx.ellipse(g[0],g[1],s*3.6*(1-bob*0.08),s*1.2,0,0,6.283);ctx.fill();
+  var vis=[];
+  PIP_DIRS.forEach(function(d,i){var n=rot(d[0],d[1],d[2]);if(n[2]>0.02)vis.push({d:d,i:i,lum:0.62+0.38*Math.max(0,n[2]*0.55+n[1]*0.6+n[0]*-0.2)})});
+  var items=model.list.map(function(v){var q=rot(v.x,v.y,v.z);return {v:v,z:q[2]}});
+  items.sort(function(a,b){return a.z-b.z});
+  var glow=(mood==='alert'&&Math.floor(sec*4)%2===0);
+  ctx.lineJoin='round';ctx.lineWidth=0.6;ctx.strokeStyle='rgba(5,20,22,.55)';
+  items.forEach(function(it){
+    var v=it.v,col=v.c;
+    if(v.y===11&&v.x===0)col=mood==='alert'?(glow?'#ff5c5c':'#7a1f1f'):mood==='sleepy'?'#8a7a3a':'#f5c542';
+    if(col==='#c8fff8'&&mood==='sleepy')col='#4f8f88';
+    vis.forEach(function(f){
+      var d=f.d;if(model.map[(v.x+d[0])+','+(v.y+d[1])+','+(v.z+d[2])])return;
+      var x=v.x-0.5,y=v.y,z=v.z-0.5,P;
+      if(d[0]===1)P=[[x+1,y,z],[x+1,y+1,z],[x+1,y+1,z+1],[x+1,y,z+1]];
+      else if(d[0]===-1)P=[[x,y,z],[x,y,z+1],[x,y+1,z+1],[x,y+1,z]];
+      else if(d[1]===1)P=[[x,y+1,z],[x,y+1,z+1],[x+1,y+1,z+1],[x+1,y+1,z]];
+      else if(d[1]===-1)P=[[x,y,z],[x+1,y,z],[x+1,y,z+1],[x,y,z+1]];
+      else if(d[2]===1)P=[[x,y,z+1],[x+1,y,z+1],[x+1,y+1,z+1],[x,y+1,z+1]];
+      else P=[[x,y,z],[x,y+1,z],[x+1,y+1,z],[x+1,y,z]];
+      ctx.beginPath();
+      P.forEach(function(p,j){var q=scr(p[0],p[1],p[2]);j?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});
+      ctx.closePath();
+      var bright=(col==='#c8fff8'||(v.y===11&&mood!=='sleepy'))?1.15:f.lum;
+      ctx.fillStyle=shade(col,bright);ctx.fill();ctx.stroke();
+    });
+  });
+}
+(function pipLoop(t){
+  var list=document.querySelectorAll('canvas.pip3d');
+  for(var i=0;i<list.length;i++)drawPip(list[i],t);
+  requestAnimationFrame(pipLoop);
+})(performance.now());
+/* old flat Pip (kept for reference) */
 var PIP=['....XXXX....','..XXHHLLXX..','.XHWHLLLLDX.','.XHHLLLLLDX.','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLLDX','XLLLLLLLLDDX','.XLLLLLLDDX.','..XXDDDDXX..','....XXXX....'];
 var PIPC={X:'#0b3532',H:'#a8fdf0',W:'#ffffff',L:'#4aedd9',D:'#259a8c',E:'#0b1a1a',R:'#0b3532',P:'#ff8fb1'};
 var FACES={
@@ -1129,7 +1259,9 @@ function updateBuddy(){
   var m=buddyMood();
   if(m!==pipMood){
     pipMood=m;host.querySelector('.buddy').setAttribute('data-mood',m);
-    host.querySelector('#pip').innerHTML=pipSvg(m)+(m==='sleepy'?'<span class="zzz">z z</span>':'');
+    var pc=host.querySelector('#pip canvas');
+    if(!pc){host.querySelector('#pip').innerHTML=pipEl(m)+'<span class="zzz" hidden>z z</span>';pc=host.querySelector('#pip canvas')}
+    pc.setAttribute('data-mood',m);host.querySelector('#pip .zzz').hidden=m!=='sleepy';
     if(m==='alert'){var d=dueList();if(d.length)say('Hey! Time for '+d[0].r.name+'!')}
   }
 }
@@ -1166,7 +1298,7 @@ function slides(){
     {h:'Level up',p:'Every $100 saved is a level on your goal bar. Every $10 is a diamond in your inventory. Unlock advancements for streaks, goals and taking every reminder.',
      d:'<div class="demo"><div class="xpwrap"><span class="lvl">3</span><div class="xp"><i style="width:38%"></i></div></div><div class="gemrow">'+gem()+gem()+gem()+gem()+gem()+'</div></div>'},
     {h:'Meet Pip',p:'Pip is your pixel helper in the corner. Pip cheers when you take your meds or save money, warns you when something is due, and gives tips when you click. You can turn Pip, sounds and gem bursts off in Settings.',
-     d:'<div class="demo" style="justify-items:center"><div style="width:80px;height:74px">'+pipSvg('party')+'</div></div>'},
+     d:'<div class="demo" style="justify-items:center"><div style="width:120px;height:130px">'+pipEl('happy')+'</div></div>'},
     {h:'One last thing',p:'Pixel Life can only sound alarms while '+(DESKTOP?'your PC is on and awake':'this page is open and your device is awake')+'. Keep alarms on your phone and your Dexcom alerts turned on as a backup, especially overnight.',
      d:'<div class="demo"><div class="chips"><span class="chip good">Pixel Life</span><span class="chip good">Phone alarms</span><span class="chip good">Dexcom alerts</span></div></div>'}
   ];
